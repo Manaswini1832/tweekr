@@ -5,7 +5,7 @@ export const CurrCollContext = React.createContext(null);
 
 export const CurrCollContextProvider = (props) => {
 
-    const [currColl, setCurrColl] = useState(1);
+    const [currColl, setCurrColl] = useState("Uncategorized");
 
     return(
         <CurrCollContext.Provider value={{currColl, setCurrColl}}>

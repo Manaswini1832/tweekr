@@ -2,12 +2,18 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
+import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
+
+import SideBar from "../SideBar/SideBar";
+import TweeksContainer from "../TweeksContainer/TweeksContainer";
 
 const Profile = () => {
 
     const [show, setShow] = useState(true);
     const {auth, setAuth} = useContext(AuthContext);
+    const {currColl, setCurrColl} = useContext(CurrCollContext);
 
     useEffect(() => {
             if(show) {
@@ -41,9 +47,13 @@ const Profile = () => {
         <div>
             {
             show
-            ?   <div><h1>Hello {auth.name}</h1>
-                <button onClick={signUserOut}>Sign out</button>
-                <a href="https://twitter.com/home"><button>Go to Twitter</button></a>
+            ?   <div>
+                    <h1>Hello {auth.name}</h1>
+                    <button onClick={signUserOut}>Sign out</button>
+                    <a href="https://twitter.com/home"><button>Go to Twitter</button></a>
+                    <h1>{currColl}</h1>
+                    <SideBar />
+                    <TweeksContainer />
                 </div>
             :   <div>
                     You're not logged in.

@@ -4,6 +4,7 @@ export const CollecNamesContext = React.createContext(null);
 
 export const CollecNamesContextProvider = (props) => {
 
+    //Should get these collection names from Postgres DB
     const [collecNames, setCollecNames] = useState(["Uncategorized", "ML", "Freelancing", "Finance"]);
 
     return(

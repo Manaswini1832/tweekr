@@ -1,6 +1,8 @@
 import { set } from "js-cookie";
 import { useState, useEffect, useContext } from "react";
 
+import "./TweeksContainer.css";
+
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
 import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext"
@@ -8,11 +10,14 @@ import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext"
 
 import Tweek from "../Tweek/Tweek";
 import Loading from "../Loading/Loading";
+import Modal from "../Modal/Modal";
 
 const TweeksContainer = () => {
 
     const [tweetIds, setTweetIds] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [newCollec, setNewCollec] = useState(null);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
@@ -23,11 +28,11 @@ const TweeksContainer = () => {
         setTweetIds([]);
         setLoading(true);
         if(currColl === "Uncategorized") {
-            anything();
+            getUncatTweets();
         }
     }, [currColl]);
 
-    async function anything(){
+    async function getUncatTweets(){
 
         let tweeksArray = [];
         await db.collection(user.auth.uid).where('category', '==', 'Uncategorized').get()
@@ -41,42 +46,61 @@ const TweeksContainer = () => {
         setLoading(false);
     }
 
-    function makePgRequest(collec, id){
-        console.log("Will make a request to the PG DB");
+    function removeTweet(id){
+        const arrToBeDeleted = tweetIds.filter(tweetId => tweetId !== id);
+        setTweetIds([]);
+        setTweetIds(arrToBeDeleted);
     }
 
-    function removeTweet(id){
-        console.log(id)
-        const tweetIdsDup = tweetIds;
-        let dummyArray = tweetIdsDup.filter(item => item !== id);
-        console.log(dummyArray);
-        setTweetIds([]);
-        setTweetIds([...dummyArray]);
-        console.log(dummyArray)
+    function makePgRequest(collec, id){
+        console.log("Will make a request to the PG DB");
+        removeTweet(id);
+    }
+
+    function handleNewCollecChange(e){
+        setNewCollec(e.target.value);
+    }
+
+    function createCollection(e){
+        e.preventDefault();
+        if(newCollec && newCollec !== ""){
+            console.log("Will create new collection");
+            console.log(newCollec);
+        }else if(newCollec === ""){
+            alert("Please enter a collection name");
+        }else if(!newCollec){
+            alert("Please enter a collection name");
+        }
     }
 
     return(
         <div>
+            <button onClick={() => setModalOpen(true)}>New Collection</button>
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+                <form onSubmit={createCollection}>
+                    <label>Enter a new collection name</label>
+                    <input onChange={handleNewCollecChange} type="text"/>
+                    <div className="button-div">
+                        <button type="submit">Create</button>
+                        <button onClick={() => setModalOpen(false)}>Cancel</button>
+                    </div>
+                </form>
+            </Modal>
             <h1>Tweeks here from {currColl}</h1>
             {
                 tweetIds.map((id, index) => {
                     return(
-                        <div key={index}>
+                        <div className="tweek-box" key={id}>
                             <Tweek tweetID={id} />
-                            <p>{id}</p>
-                            <label htmlFor="collection names">Move to</label>
                             <select onChange={(e) => {
-                                const selectedCollec = e.target.value;
-                                const tweetId = id;
-                                makePgRequest(selectedCollec, tweetId);
-                                console.log(tweetId)
-                                removeTweet(tweetId);
-                            }} name="collection names" id="collection names">
+                                makePgRequest(e.target.value, id);
+                            }}>
+                                <option defaultValue disabled>Move to</option>
                                 {
-                                    collecNames.map((collec, index) => {
-                                        if(collec !== currColl) {                                            
+                                    collecNames.map((collecName, index) => {
+                                        if(collecName !== currColl){
                                             return(
-                                                <option key={index} value={collec}>{collec}</option>
+                                                <option key={index}>{collecName}</option>
                                             )
                                         }
                                     })
@@ -86,6 +110,7 @@ const TweeksContainer = () => {
                     )
                 })
             }
+
             {
                 loading
                 ? <Loading />

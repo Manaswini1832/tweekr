@@ -1,0 +1,2 @@
+1) Issue : I would click on a tweek and it wouldn't be deleted. Instead, the last tweek would get deleted always.
+SOLUTION : Changed key of the tweek-div to {tweetId} instead of {index}. That worked. But not sure why!

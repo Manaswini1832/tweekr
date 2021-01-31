@@ -30,6 +30,10 @@ app.use(cors());
 //Middleware to create XSRF token for every endpoint
 app.all('*', xsrfCreator);
 
+app.get("/", (req, res) => {
+    res.send("Hey there:)")
+})
+
 //To log users in by creating the session cookie and stuff
 app.post("/api/v1/sessionLogin", sessionLoginHandler);
 

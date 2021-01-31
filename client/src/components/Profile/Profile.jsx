@@ -57,7 +57,7 @@ const Profile = () => {
                 </div>
             :   <div>
                     You're not logged in.
-                    <Link to="/login"><button>Go back to login page</button></Link>
+                    <Link to="/"><button>Go back to login page</button></Link>
                 </div>
             }
         </div>

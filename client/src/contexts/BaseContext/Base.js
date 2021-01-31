@@ -1,5 +1,6 @@
 import app from "firebase/app";
 import "firebase/auth";
+import "firebase/firestore";
 import Cookies from "js-cookie";
 
 const devConfig = {
@@ -13,7 +14,8 @@ const devConfig = {
 
 class Firebase {
     constructor(){
-        this.app = app.initializeApp(devConfig)
+        this.app = app.initializeApp(devConfig);
+        this.db = app.firestore();
     }
     doSignIn = async() => {
             const provider = new app.auth.TwitterAuthProvider();

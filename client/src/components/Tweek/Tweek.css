@@ -1,0 +1,15 @@
+.tweek{
+    width:500px;
+}
+
+@media screen and (max-width:768px){
+    .tweek{
+        width:300px;
+    }
+}
+
+@media screen and (max-width:350px){
+    .tweek{
+        width:250px;
+    }
+}

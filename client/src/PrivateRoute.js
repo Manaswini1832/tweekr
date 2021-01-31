@@ -31,7 +31,7 @@ const PrivateRoute = ({ component: RouteComponent, ...rest }) => {
       render={routeProps =>
         show ? (
           <RouteComponent {...routeProps} />
-        ) : <div>Not authorized to access this page <Link to="/login"><button>Go back to login page</button></Link></div>
+        ) : <div>Not authorized to access this page <Link to="/"><button>Go back to login page</button></Link></div>
       }
     />
   );

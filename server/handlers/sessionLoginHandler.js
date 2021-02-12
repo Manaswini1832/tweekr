@@ -10,6 +10,7 @@ exports.sessionLoginHandler = (req, res) => {
         const options = { maxAge : expiresIn, httpOnly : true };
         res.cookie("session", sessionCookie, options);
         res.end(JSON.stringify({ status : "success" }))
+        console.log("Cookie set!")
     },
     (error) => {
         res.status(401).send("UNAUTHORIZED REQUEST!");

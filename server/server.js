@@ -43,112 +43,73 @@ app.get("/api/v1/validateEntry", validateEntryHandler);
 //To sign the user out
 app.get("/api/v1/signOut", signOutHandler);
 
-//Postgres DB routes
-/*Get tweet details from database : tweet id, collection_id, note and the tags array*/
-app.get("/api/v1/tweek", async(req, res) => {
-    try {
-        const response = await postgresDb.query("SELECT * FROM tweeks");
-        const data = response.rows;
-        res.json({
-            "data" : data
-        });
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-/*Store tweet id, collection_id notes and tags in the database*/
-app.post("/api/v1/tweek", async(req, res) => {
-    try {
-        const input = req.body;
-        const tweetInfo = input.tweetInfo;
-        await postgresDb.query("INSERT INTO tweeks (tweet_id, note, tags) VALUES ($1, $2, $3)", [tweetInfo.tweet_id, tweetInfo.note, tweetInfo.tags])
-        .then(() => {
-            res.json({
-                "message" : "Success! Tweek added to the database :)"
-            });
-        })
-        .catch((err) => {
-            console.error(err);
-            res.json({
-                "message" : "Failure! Couldn't add Tweek to the database :( Please try again!"
-            });
-        });
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-/*Edit note and tags CANNOT EDIT TWEET_ID REMEMBER*/
-app.put("/api/v1/tweek/:id", async(req, res) => {
-    try {
-        const tweekSerialNumber = req.params.id;
-        const changes = req.body.tweetInfo;
-        const note = changes.note;
-        const tags = changes.tags;
-        const collection_id = changes.collection_id;
-
+//Sets user details in postgres DB
+app.post("/api/v1/setUser", async(req, res) => {
+    if(req.body.userInfo.auth){
+        const user_id = req.body.userInfo.auth.uid;
+        //ON CONFLICT DO NOTHING ensures that user_id stays unique and we don't keep on adding the same user to table again & again
         await postgresDb.query(
-            "UPDATE tweeks SET note = $1, tags = $2 collection_id=$3 WHERE id = $4",
-            [note, tags, collection_id, tweekSerialNumber]
-        )
-        .then(() => {
-            res.json({
-                "message" : "Success! Tweek updated"
+            "INSERT INTO users (user_id, plan) VALUES ($1, $2) ON CONFLICT DO NOTHING", [user_id, 'free'])
+        .then((data) => {
+            res.send({
+                "message" : "Success",
+                data : data.rows
             })
         })
         .catch((err) => {
             console.error(err);
-            res.json({
-                "message" : "Failure! Couldn't update Tweek. Please try again!"
+            res.send({
+                "message" : "Failure! Couldn't retrieve collections. Please try again!"
             })
         });
-    } catch (err) {
-        console.error(err);
     }
+})
+
+//Retrieve all collections
+app.get("/api/v1/collections/:user_id", async(req, res) => {
+    const user_id = req.params.user_id 
+    await postgresDb.query(
+                    "SELECT collection_id, collection_name FROM collections WHERE user_id = $1", [user_id]
+                )
+                .then((data) => {
+                    res.send({
+                        "message" : "Success",
+                        data : data.rows
+                    })
+                })
+                .catch((err) => {
+                    console.error(err);
+                    res.send({
+                        "message" : "Failure! Couldn't retrieve collections. Please try again!"
+                    })
+                });
 });
 
-/*Delete tweet totally from postgresDb*/
-app.delete("/api/v1/tweek/:id", async(req, res) => {
-    try {
-        const tweekSerialNumber = req.params.id;
-        await postgresDb.query("DELETE FROM tweeks WHERE id = $1", [tweekSerialNumber])
-        .then(() => {
-            res.json({
-                "message" : "Success! Tweek successfully deleted"
-            });
-        })
-        .catch((err) => {
-            console.error(err);
-            res.json({
-                "message" : "Failure! Couldn't delete Tweek. Please try again!"
-            });
-        });
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-/*Create a new collection*/
+//Create a new collection
 app.post("/api/v1/collections", async(req, res) => {
     try {
         const collection_name = req.body.collectionInfo.collection_name;
-        console.log(collection_name);
-        await postgresDb.query("INSERT INTO collections (collection_name) VALUES ($1)", [collection_name])
-        .then(() => {
+        const user_id = req.body.collectionInfo.user_id
+        console.log(user_id);
+        await postgresDb.query("INSERT INTO collections (collection_name, user_id) VALUES ($1, $2) RETURNING collection_id, collection_name, user_id", [collection_name, user_id])
+        .then((response) => {
             res.json({
-                "message" : "Success! Collection created successfully!"
+                "message" : "Success! Collection created successfully!",
+                "payload" : response.rows
             });
         })
         .catch((err) => {
             console.error(err);
+            res.json({
+                "message" : "Failure! Couldn't create collection!",
+            });
         });
     } catch (err) {
         console.error(err);
     }
 });
 
-/*Edit collection name*/
+//Edit collection name
 app.put("/api/v1/collections/:collection_id", async(req, res) => {
     try {
         const collection_id = req.params.collection_id;
@@ -168,41 +129,74 @@ app.put("/api/v1/collections/:collection_id", async(req, res) => {
             })
         });
     } catch (err) {
-        console.error(err);
-    }
-});
-
-/*Get all collection names*/
-app.get("/api/v1/collections", async(req, res) => {
-    try {
-        const response = await postgresDb.query("SELECT * FROM collections")
-        res.json({
-                "message" : "Success! Got all collections :)",
-                "collections" : response.rows
-            })
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-/*Delete collection*/
-app.delete("/api/v1/collections/:collection_id", async(req, res) => {
-    try {
-        const collection_id = req.params.collection_id;
-        await postgresDb.query("DELETE FROM collections WHERE collection_id = $1", [collection_id])
-        .then(() => {
-            res.json({
-                "message" : "Successfully deleted collection :)",
-            })
-        })
-        .catch((err) => {
-            res.json({
-                "message" : "Failed to delete. Please try again!"
-            })
             console.error(err);
-        })
+}
+});
+
+//Delete collection
+app.delete("/api/v1/collections/:collection_id", async(req, res) => {
+        try {
+            const collection_id = req.params.collection_id;
+            await postgresDb.query("DELETE FROM collections WHERE collection_id = $1", [collection_id])
+            .then(() => {
+                res.json({
+                    "message" : "Successfully deleted collection :)",
+                })
+            })
+            .catch((err) => {
+                res.json({
+                    "message" : "Failed to delete. Please try again!"
+                })
+                console.error(err);
+            })
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+app.post("/api/v1/moveTweek", async(req, res) => {
+    try {
+        const tweet_id = req.body.tweek_info.tweet_id;
+        const user_id = req.body.tweek_info.user_id;
+        const collection_id = req.body.tweek_info.collection_id;
+        await postgresDb.query("INSERT INTO tweeks (tweet_id, user_id, collection_id) VALUES ($1, $2, $3)", [tweet_id, user_id, collection_id])
+            .then(() => {
+                res.json({
+                    "message" : "Successfully moved tweek!",
+                })
+            })
+            .catch((err) => {
+                res.json({
+                    "message" : "Failed to move tweek. Please try again!"
+                })
+                console.error(err);
+            })
+
     } catch (err) {
         console.error(err);
+        res.send("Error moving tweek into a collection! Please try again");
+    }
+});
+
+app.get("/api/v1/tweeks", async(req, res) => {
+    try {
+        const collection_id = req.query.collection_id;
+        const user_id = req.query.user_id;
+        await postgresDb.query("SELECT tweek_serial_number, tweet_id, tweeks.user_id, tweeks.collection_id FROM tweeks WHERE tweeks.user_id = $1 AND tweeks.collection_id = $2", [user_id, collection_id])
+                .then((response) => {
+                    res.json({
+                        "message" : "Successfully moved tweek!",
+                        payload : response.rows
+                    })
+                })
+                .catch((err) => {
+                    res.json({
+                        "message" : "Failed to move tweek. Please try again!"
+                    })
+                    console.error(err);
+                })
+    } catch (err) {
+        console.error(err)
     }
 });
 

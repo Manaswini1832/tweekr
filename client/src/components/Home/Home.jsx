@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 
 const Home = () => {
     return(
         <div>
             <h1>Home page</h1>
-            <Link to="/login">Start tweeking now!</Link>
+            <button><Link to="/login">Start Tweeking</Link></button>
         </div>
     )
 }

@@ -45,24 +45,30 @@ app.get("/api/v1/signOut", signOutHandler);
 
 //Sets user details in postgres DB
 app.post("/api/v1/setUser", async(req, res) => {
-    if(req.body.userInfo.auth){
-        const user_id = req.body.userInfo.auth.uid;
+    // if(req.body.userInfo.auth){
+        const user_id = req.body.userInfo.auth?.uid;
         //ON CONFLICT DO NOTHING ensures that user_id stays unique and we don't keep on adding the same user to table again & again
+        // console.log("Got till here")
+        
+       if(user_id){
         await postgresDb.query(
-            "INSERT INTO users (user_id, plan) VALUES ($1, $2) ON CONFLICT DO NOTHING", [user_id, 'free'])
-        .then((data) => {
+            "INSERT INTO users (user_id, plan) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT users_user_id_key DO NOTHING", [user_id, 'free'])
+        .then(async(data) => {
+            // console.log("Got inside")
             res.send({
                 "message" : "Success",
                 data : data.rows
             })
         })
         .catch((err) => {
+            console.log("Catch")
             console.error(err);
             res.send({
                 "message" : "Failure! Couldn't retrieve collections. Please try again!"
             })
         });
-    }
+       } 
+    // }
 })
 
 //Retrieve all collections
@@ -177,6 +183,37 @@ app.post("/api/v1/moveTweek", async(req, res) => {
         res.send("Error moving tweek into a collection! Please try again");
     }
 });
+
+app.post('/api/v1/createTweek', async(req, res) => {
+    try {
+        const tweet_id = req.body.tweek_info.tweet_id;
+        const user_id = req.body.tweek_info.user_id;
+        const collection_id = req.body.tweek_info.collection_id;
+        // console.log(tweet_id)
+        // console.log(user_id)
+        // console.log(collection_id)
+        await postgresDb.query("INSERT INTO tweeks (tweet_id, user_id, collection_id) VALUES ($1, $2, $3)", [tweet_id, user_id, collection_id])
+            .then(() => {
+                res.json({
+                    "message" : "Successfully created tweek!",
+                })
+            })
+            .catch((err) => {
+                res.json({
+                    "message" : "Failed to create tweek. Please try again!"
+                })
+                console.error(err);
+            })
+    //    res.json({
+    //        'message' : 'Successfully created tweek!'
+    //    }) 
+    } catch (err) {
+        res.json({
+            'message' : 'Failed to create a tweek. Please try again!'
+        })
+        console.error(err)
+    }
+})
 
 app.get("/api/v1/tweeks", async(req, res) => {
     try {

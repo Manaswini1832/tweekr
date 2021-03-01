@@ -3,13 +3,13 @@ CREATE DATABASE tweekr;
 
 /*Create the tweeks table*/
 /*For now I'll ignore all kinds of inner joins with the users table. If the need arises, I'll add that column later*/
-CREATE TABLE tweeks (
-    id BIGSERIAL NOT NULL PRIMARY KEY,
-    tweet_id BIGINT NOT NULL,
-    note TEXT,
-    tags VARCHAR(20)[] CHECK (array_length(tags, 1) < 5),
-    collection_id BIGSERIAL NOT NULL REFERENCES collections(collection_id)
-);
+-- CREATE TABLE tweeks (
+--     id BIGSERIAL NOT NULL PRIMARY KEY,
+--     tweet_id BIGINT NOT NULL,
+--     note TEXT,
+--     tags VARCHAR(20)[] CHECK (array_length(tags, 1) < 5),
+--     collection_id BIGSERIAL NOT NULL REFERENCES collections(collection_id)
+-- );
 
 ALTER TABLE tweeks ALTER COLUMN collection_id SET DEFAULT 1;
 

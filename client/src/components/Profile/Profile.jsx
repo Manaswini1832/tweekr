@@ -4,12 +4,15 @@ import axios from "axios";
 import { Redirect } from "react-router-dom";
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
+import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
 import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
 
 import SideBar from "../SideBar/SideBar";
 import TweeksContainer from "../TweeksContainer/TweeksContainer";
 import Modal from "../Modal/Modal";
+import { set } from "js-cookie";
+
 
 const Profile = () => {
 
@@ -20,30 +23,47 @@ const Profile = () => {
     const [showDeleteCollecModal, setShowDeleteCollecModal] = useState(false);
     const [collecIDToEdit, setCollecIDToEdit] = useState(null); //collection_id of collection to be edited
     const [url, setUrl] = useState("");
-    const [showTweekAddForm, setShowTweekAddForm] = useState(false);
     const [collecIDToDelete, setCollecIDToDelete] = useState(null);
+    const [showTweekAddForm, setShowTweekAddForm] = useState(false);
+    const [addTweek, setAddTweek] = useState(false);
+    const [twID, setTwID] = useState(null);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
+    const firebase = useContext(BaseContext);
+    const db = firebase.db
 
     const [showLoader, setShowLoader] = useState(true);
     const [showUnauth, setShowUnauth] = useState(false);
 
     useEffect(() => {
         validateUserEntry();
+        const extID = 'aineoagmcghnilahgnnmimnjdanfddif';
+        console.log(extID)
         if(!showLoader) {
-            const extID = "gdojcfcfdabkipoiokmifhnobdiencal";
             chrome.runtime.sendMessage(extID, {
                 message : "Message from the web app",
                 uid : auth.uid
-         })}
+         }, (response) => {
+             console.log(response)
+            if(!response){
+                // console.log('Extension not installed');
+                setTimeout (console.log.bind (console, 'Extension not installed'));
+            }else{
+                setTimeout (console.log.bind (console, 'Yayy!! You have all the things set up to start bookmarking tweets!'));
+            }
+        })}
     }, []);
 
     useEffect(() => {
-        if(currColl !== "Uncategorized"){
+        if(currColl[0].collection_name !== "Uncategorized"){
             setShowTweekAddForm(true)
+        }else{
+            setShowTweekAddForm(false)
         }
-    }, []);
+
+    }, [currColl]);
+
 
     async function validateUserEntry(){
         await axios.get("/api/v1/validateEntry")
@@ -138,23 +158,42 @@ const Profile = () => {
     }
 
     function makeTweek(e){
-        // e.preventDefault();
-        // if(url !== ""){
-        //     try{
-        //         const tweetIDRegex = /(?<=status\/)\d+/;
-        //         const enteredId = url.match(tweetIDRegex)[0];
-        //         //Add tweet id to postgres
-        //         // addTweetId(enteredId);
-        //         setTweetIds((prevIds) => {
-        //             return [...prevIds, enteredId];
-        //         });
-        //         setUrl("");
-        //     }
-        //     catch(err){
-        //         console.error(err);
-        //     }
-        // }
+        e.preventDefault();
+        console.log(url)
+        if(url !== ""){
+            try{
+                const tweetIDRegex = /(?<=status\/)\d+/;
+                const enteredId = url.match(tweetIDRegex)[0];
+                const collectionID = currColl[0].collection_id;
+                //Add tweet id to postgres
+                addTweetId(enteredId, collectionID);
+                // setTweetIds((prevIds) => {
+                //     return [...prevIds, enteredId];
+                // });
+                setUrl("");
+                console.log(enteredId)
+            }
+            catch(err){
+                console.error(err);
+            }
+        }
     }
+
+    async function addTweetId(enteredID, collectionID){
+        await axios.post('/api/v1/createTweek', {
+            tweek_info: {
+                tweet_id : enteredID, 
+                user_id: auth.uid,
+                collection_id : collectionID
+            }
+        })
+        .then((res) => {
+            if(res.data.message === 'Successfully created tweek!'){
+                setAddTweek(true)
+                setTwID(enteredID)
+            }
+        })
+    }    
 
     return(
         <div>
@@ -169,14 +208,21 @@ const Profile = () => {
             <SideBar editCollec={editCollec} setShowDeleteCollecModal={setShowDeleteCollecModal} setCollecIDToDelete={setCollecIDToDelete}/>
             {
                 showTweekAddForm
-                ? <form onSubmit={makeTweek}>
+                ?  <form onSubmit={makeTweek}>
                     <label>Paste tweet URL</label>
-                    <input type="text"/>
+                    <input onChange={e => setUrl(e.target.value)} type="text" value={url}/>
                     <button type="submit">Add</button>
-                </form>
+            </form>
                 : null
             }
-            <TweeksContainer />
+
+            <TweeksContainer addTweek={addTweek} twID={twID}/>
+            <button onClick={() => {
+                if(addTweek) setAddTweek(false)
+                else{
+                    setAddTweek(true)
+                }
+            }}>CLICK</button>
             <Modal open={showEditCollecModal} onClose={() => setShowEditCollecModal(false)}>
                 <form>
                     <label>Type in your new collection name :</label>

@@ -12,7 +12,7 @@ import Tweek from "../Tweek/Tweek";
 import Loading from "../Loading/Loading";
 import Modal from "../Modal/Modal";
 
-const TweeksContainer = () => {
+const TweeksContainer = (props) => {
 
     const [tweetIds, setTweetIds] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -24,6 +24,7 @@ const TweeksContainer = () => {
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
+    const [addTweek, setAddTweek] = useState(props.addTweek)
 
     useEffect(() => {
         setTweetIds([]);
@@ -34,6 +35,17 @@ const TweeksContainer = () => {
             getCollecTweeks();
         }
     }, [currColl]);
+
+    useEffect(() => {
+            console.log('Will add tweek')
+            let twIds = tweetIds;
+            if(props.twID){
+                setTweetIds([]);
+                twIds.push(props.twID);
+                setTweetIds(twIds);
+                console.log(props.twID)
+              }
+    })
 
     async function getUncatTweets(){
         let tweeksArray = [];
@@ -48,7 +60,8 @@ const TweeksContainer = () => {
         setLoading(false);
 
         if(tweeksArray.length === 0){
-            setNoTweeks(true);
+            //Try getting from postgres as well
+            getCollecTweeks();
         }else{
             setNoTweeks(false);
         }

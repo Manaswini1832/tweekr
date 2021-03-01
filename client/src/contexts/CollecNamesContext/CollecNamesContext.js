@@ -24,7 +24,6 @@ export const CollecNamesContextProvider = (props) => {
            if(auth){
             await axios.get(`/api/v1/collections/${auth.uid}`)
             .then((res) => {
-                console.log(res.data.data)
                 const data = res.data.data;
                 data.unshift({
                     collection_id : "0",

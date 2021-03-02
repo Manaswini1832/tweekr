@@ -11,6 +11,7 @@ import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext"
 import Tweek from "../Tweek/Tweek";
 import Loading from "../Loading/Loading";
 import Modal from "../Modal/Modal";
+import Tags from "../Tags/Tags";
 
 const TweeksContainer = (props) => {
 
@@ -19,12 +20,14 @@ const TweeksContainer = (props) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [newCollec, setNewCollec] = useState(null);
     const [noTweeks, setNoTweeks] = useState(false);
+    const [twIDToAdd, setTwIDToAdd] = useState(null);
+    const [tags, setTags] = useState();
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
-    const [addTweek, setAddTweek] = useState(props.addTweek)
+    // const [addTweek, setAddTweek] = useState(props.addTweek)
 
     useEffect(() => {
         setTweetIds([]);
@@ -37,15 +40,27 @@ const TweeksContainer = (props) => {
     }, [currColl]);
 
     useEffect(() => {
-            console.log('Will add tweek')
-            let twIds = tweetIds;
+        if(props.addTweek){
             if(props.twID){
-                setTweetIds([]);
-                twIds.push(props.twID);
-                setTweetIds(twIds);
-                console.log(props.twID)
-              }
+                setTwIDToAdd(props.twID)
+            }
+        }
     })
+
+    useEffect(() => {
+        if(twIDToAdd){
+            //If this tweet id is already in the page, do nothing
+            //If not, add it to tweetIds array
+            const alreadyPresent = tweetIds.includes(twIDToAdd);
+            if(!alreadyPresent) {
+                setTweetIds((prev) => {
+                    return [...prev, twIDToAdd];
+                })
+            }else{
+                console.log('Won\'t do anything because the tweet is already present')
+            }
+        }
+    }, [twIDToAdd]);
 
     async function getUncatTweets(){
         let tweeksArray = [];
@@ -155,6 +170,7 @@ const TweeksContainer = (props) => {
                         return[...prev, ...res.data.payload]
                     });
                     setModalOpen(false);
+                    setCurrColl(res.data.payload);
                 }else{
                     alert(res.data.message);
                 }
@@ -202,6 +218,7 @@ const TweeksContainer = (props) => {
                                     makePgRequest(collection_id, id);
                                 }
                             }}>
+                                <option>Move into</option>
                                 {
                                     collecNames.map((collec, index) => {
                                         if(collec.collection_name){
@@ -212,6 +229,7 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
+                            <Tags tweetID={id} />
                         </div>
                     )
                 })

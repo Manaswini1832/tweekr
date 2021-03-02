@@ -38,22 +38,20 @@ const Profile = () => {
 
     useEffect(() => {
         validateUserEntry();
+    }, []);
+
+    useEffect(() => {
         const extID = 'aineoagmcghnilahgnnmimnjdanfddif';
-        console.log(extID)
-        if(!showLoader) {
+        if(auth){
+            if(auth.uid){
             chrome.runtime.sendMessage(extID, {
                 message : "Message from the web app",
                 uid : auth.uid
-         }, (response) => {
-             console.log(response)
-            if(!response){
-                // console.log('Extension not installed');
-                setTimeout (console.log.bind (console, 'Extension not installed'));
-            }else{
-                setTimeout (console.log.bind (console, 'Yayy!! You have all the things set up to start bookmarking tweets!'));
-            }
-        })}
-    }, []);
+         })}
+        }
+        // console.log('Auth changed')
+        // console.log(auth)
+    }, [auth]);
 
     useEffect(() => {
         if(currColl[0].collection_name !== "Uncategorized"){
@@ -127,6 +125,12 @@ const Profile = () => {
                         collection_name : collecNameAfterEdit
                     }
                     setCollecNames(newArray);
+                    if(currColl[0].collection_name === collecNameBeforeEdit){
+                        setCurrColl([{
+                            collection_id: collecIDToEdit,
+                            collection_name : collecNameAfterEdit
+                        }])
+                    } 
                 }else{
                     alert("Couldn't update collection. Please try again!");
                 }
@@ -159,7 +163,6 @@ const Profile = () => {
 
     function makeTweek(e){
         e.preventDefault();
-        console.log(url)
         if(url !== ""){
             try{
                 const tweetIDRegex = /(?<=status\/)\d+/;
@@ -171,7 +174,6 @@ const Profile = () => {
                 //     return [...prevIds, enteredId];
                 // });
                 setUrl("");
-                console.log(enteredId)
             }
             catch(err){
                 console.error(err);
@@ -215,14 +217,8 @@ const Profile = () => {
             </form>
                 : null
             }
-
             <TweeksContainer addTweek={addTweek} twID={twID}/>
-            <button onClick={() => {
-                if(addTweek) setAddTweek(false)
-                else{
-                    setAddTweek(true)
-                }
-            }}>CLICK</button>
+            
             <Modal open={showEditCollecModal} onClose={() => setShowEditCollecModal(false)}>
                 <form>
                     <label>Type in your new collection name :</label>

@@ -237,6 +237,27 @@ app.get("/api/v1/tweeks", async(req, res) => {
     }
 });
 
+app.put("/api/v1/addTags", async(req, res) => {
+    const tags = req.body.tweek_info.tags;
+    const tagsJSON = JSON.stringify(tags);
+    const tweet_id = req.body.tweek_info.tweet_id;
+    try {
+        await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2', [tags, tweet_id])
+        .then((res) => {
+            res.json({
+                'message' : 'Successfully added tags'
+            })
+        })
+        .catch((err) => {
+            res.json({
+                'message' : 'Failed to add tags. Please try again!'
+            })
+        })
+    } catch (err) {
+        console.error(err)
+    }
+})
+
 //Listening on port
 app.listen(PORT, (req, res) => {
     console.log(`Server up and running on port ${PORT}`);

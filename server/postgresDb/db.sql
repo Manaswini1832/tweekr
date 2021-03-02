@@ -37,8 +37,9 @@ CREATE TABLE users (
 CREATE TABLE tweeks (
     tweek_serial_number BIGSERIAL NOT NULL PRIMARY KEY,
     tweet_id TEXT NOT NULL,
-    user_id TEXT REFERENCES users(user_id) NOT NULL,
-    collection_id BIGINT REFERENCES collections(collection_id) NOT NULL
+    user_id TEXT NOT NULL  REFERENCES users(user_id) ON DELETE CASCADE,
+    collection_id BIGINT NOT NULL REFERENCES collections(collection_id) ON DELETE CASCADE,
+    tags TEXT []
 );
 
 /*Create a collection*/

@@ -16,12 +16,14 @@ const SideBar = (props) => {
     function changeCurrColl(e){
         const collection_id = e.target.getAttribute("data-collectionid");
         const collection_name = e.target.innerText;
-        setCurrColl([{
-            collection_id,
-            collection_name
-        }]);
-        //When currColl changes here, the useEffect in TweeksContainer will be triggered and resp tweeks will be
-        //fetched from PG DB
+
+        //No need to make database requests again and again if the user is clicking on same collection again and again
+        if(collection_name !== currColl[0].collection_name){
+            setCurrColl([{
+                collection_id,
+                collection_name
+            }])
+        }
     }
 
     return(

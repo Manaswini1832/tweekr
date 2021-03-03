@@ -27,7 +27,6 @@ const TweeksContainer = (props) => {
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
-    // const [addTweek, setAddTweek] = useState(props.addTweek)
 
     useEffect(() => {
         setTweetIds([]);
@@ -229,7 +228,7 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
-                            <Tags tweetID={id} />
+                            <Tags userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id}/>
                         </div>
                     )
                 })

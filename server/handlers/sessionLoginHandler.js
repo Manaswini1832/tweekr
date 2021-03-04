@@ -3,7 +3,6 @@ const { auth } = require("../utils/admin");
 exports.sessionLoginHandler = (req, res) => {
     const idToken = req.body.idToken.toString();
     const expiresIn = 60 * 60 * 24 * 5 * 1000; //5 days
- 
     auth
     .createSessionCookie( idToken, { expiresIn } )
     .then((sessionCookie) => {

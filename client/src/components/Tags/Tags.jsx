@@ -6,15 +6,18 @@ const Tags = (props) => {
 const [showTagsForm, setShowTagsForm] = useState(false);
 const [showEditForm, setShowEditForm] = useState(false);
 const [tagInput, setTagInput] = useState('');
-const [editInput, setEditInput] = useState('');
+const [beforeEditInput, setBeforeEditInput] = useState('');
+const [afterEditInput, setAfterEditInput] = useState('');
+// const [editInput, setEditInput] = useState('');
 const [tags, setTags] = useState([]);
 
 async function getTags(){
     if(props.tweetID && props.userID && props.collectionID){
 try {
+    if(props.collectionID !== 0){
         await axios.get(`/api/v1/tags?userID=${props.userID}&tweetID=${props.tweetID}&collectionID=${props.collectionID}`)
-        .then((res) => {
-            if(res.data.data[0].tags){
+        .then((res) => {   
+            if(res.data.data.length!==0 && res.data.data[0].tags){
                 setTags(res.data.data[0].tags)
                 setTags((prevTags) => {
                     return [...prevTags, ...tags];
@@ -23,6 +26,7 @@ try {
             
             // setTags(res.data.data[0])
         })
+    }
     } catch (err) {
         console.error(err)
     }}
@@ -31,6 +35,16 @@ try {
 useEffect(() => {
     getTags();
 }, []);
+
+useEffect(() => {
+    props.prepAllTagsArray(tags)
+}, [tags])
+
+useEffect(() => {
+    if(tags.includes(props.searchQuery)){
+        props.setSearchTweetIDs(props.tweetID)
+    }
+}, [props.searchQuery])
 
 async function addTags(){
     if(tagInput !== ''){
@@ -55,7 +69,28 @@ async function addTags(){
 }
 
 async function editTag(){
-    console.log(editInput);
+    let tagsArr = tags;
+    const indexOfEditInp = tags.indexOf(beforeEditInput);
+    tagsArr[indexOfEditInp] = afterEditInput;
+    makeEditRequest(tagsArr);
+}
+
+async function makeEditRequest(tagsArr){
+    await axios.put('/api/v1/tags', {
+        tweek_info : { 
+            tags :tagsArr,
+            tweet_id : props.tweetID,
+            user_id: props.userID
+        }
+    })
+    .then((res) => {
+        if(res.data.message === "Successfully edited tag!"){
+            setShowEditForm(false);
+            setTags(tagsArr);
+        }else{
+            alert("Couldn't edit tag. Please try again!")
+        }
+    })
 }
 
 async function deleteTag(tag){
@@ -99,7 +134,8 @@ async function deleteTag(tag){
                      <p>
                          {tag}
                          <button onClick={() => {
-                            setEditInput(tag);
+                            setBeforeEditInput(tag);
+                            setAfterEditInput(tag);
                             setShowEditForm(true)
                          }}>
                              Edit
@@ -118,7 +154,7 @@ async function deleteTag(tag){
                  e.preventDefault();
                  editTag();
                  } }>
-                 <input onChange={(e) => setEditInput(e.target.value)} type="text" value={editInput}/>
+                 <input onChange={(e) => setAfterEditInput(e.target.value)} type="text" value={afterEditInput}/>
                  <button type="submit">Done</button>
              </form>
              : null

@@ -274,14 +274,27 @@ app.post("/api/v1/tags", async(req, res) => {
     }
 })
 
-// //Edit tag
-// app.put("/api/v1/tags", async(req, res) => {
-//     try {
-//         await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_')
-//     } catch (err) {
-//         console.error(err)
-//     }
-// })
+//Edit tag
+app.put("/api/v1/tags", async(req, res) => {
+    const tags = req.body.tweek_info.tags;
+    const tweet_id = req.body.tweek_info.tweet_id;
+    const user_id = req.body.tweek_info.user_id;
+    try {
+        await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2 AND user_id=$3', [tags, tweet_id, user_id])
+        .then((response) => {
+            res.json({
+                'message' : 'Successfully edited tag!'
+            })
+        })
+        .catch((err) => {
+            res.json({
+                'message' : 'Failed to edit tag. Please try again!'
+            })
+        })
+    } catch (err) {
+        console.error(err)
+    }
+})
 
 //Delete tag
 app.delete("/api/v1/tags", async(req, res) => {

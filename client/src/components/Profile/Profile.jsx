@@ -216,7 +216,7 @@ const Profile = () => {
                     <button type="submit">Add</button>
             </form>
                 : null
-            }
+        }
             <TweeksContainer addTweek={addTweek} twID={twID}/>
             
             <Modal open={showEditCollecModal} onClose={() => setShowEditCollecModal(false)}>

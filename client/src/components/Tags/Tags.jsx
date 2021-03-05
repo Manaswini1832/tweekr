@@ -8,7 +8,6 @@ const [showEditForm, setShowEditForm] = useState(false);
 const [tagInput, setTagInput] = useState('');
 const [beforeEditInput, setBeforeEditInput] = useState('');
 const [afterEditInput, setAfterEditInput] = useState('');
-// const [editInput, setEditInput] = useState('');
 const [tags, setTags] = useState([]);
 
 async function getTags(){
@@ -23,8 +22,6 @@ try {
                     return [...prevTags, ...tags];
                 })
             }
-            
-            // setTags(res.data.data[0])
         })
     }
     } catch (err) {
@@ -35,16 +32,6 @@ try {
 useEffect(() => {
     getTags();
 }, []);
-
-useEffect(() => {
-    props.prepAllTagsArray(tags)
-}, [tags])
-
-useEffect(() => {
-    if(tags.includes(props.searchQuery)){
-        props.setSearchTweetIDs(props.tweetID)
-    }
-}, [props.searchQuery])
 
 async function addTags(){
     if(tagInput !== ''){

@@ -23,9 +23,6 @@ const TweeksContainer = (props) => {
     const [noTweeks, setNoTweeks] = useState(false);
     const [twIDToAdd, setTwIDToAdd] = useState(null);
     const [allTags, setAllTags] = useState([]);
-    const [search,setSearch] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResultTweetIDs ,setSearchResultTweetIDs] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
@@ -194,31 +191,6 @@ const TweeksContainer = (props) => {
         }
     }
 
-    function prepAllTagsArray(tagsArr){
-        // setAllTags((prev) => {
-        //     return [...prev, tagsArr]
-        // })
-    }
-
-    function setSearchTweetIDs(twid){
-        setSearchResultTweetIDs((prev) => {
-            return [...prev, twid]
-        })
-    }
-
-    useEffect(() => {
-        console.log("Works")
-        console.log(searchResultTweetIDs)
-    }, [searchResultTweetIDs])
-
-    useEffect(() => {
-        if(searchQuery === ''){
-            setSearch(false)
-        }else{
-            setSearch(true)
-        }
-    }, [searchQuery])
-
     return(
         <div>
             <button onClick={() => setModalOpen(true)}>New Collection</button>
@@ -239,13 +211,11 @@ const TweeksContainer = (props) => {
             : null
             }
             {
-                currColl[0].collection_name !== "Uncategorized"
+                currColl[0].collection_name !== "Uncategorized" && !noTweeks
                 ? <form>
                     <label>Search using tags :</label>
                     <input onChange={(e) => {
-                        setSearch(true);
-                        setSearchQuery(e.target.value);
-                        }} type="text" value={searchQuery}/>
+                        }} type="text"/>
                     {
                         // https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_js_dropdown_filter
                         allTags.map((eachTag, index) => {
@@ -258,36 +228,6 @@ const TweeksContainer = (props) => {
                 : null
            }
             {
-                search && searchResultTweetIDs.length!==0
-                ? searchResultTweetIDs.map((id, index) => {
-                    return(
-                        <div className="tweek-box" key={index}>
-                            <Tweek tweetID={id} />
-                            <select onChange={(e) => {
-                                const selectedIndex = e.target.options.selectedIndex;
-                                const collection_id = e.target.options[selectedIndex].getAttribute("data-collectionid");
-                                if(collection_id !== currColl[0].collection_id){
-                                    makePgRequest(collection_id, id);
-                                }
-                            }}>
-                                <option>Move into</option>
-                                {
-                                    collecNames.map((collec, index) => {
-                                        if(collec.collection_name){
-                                            return(
-                                                <option key={index} data-collectionid={collec.collection_id}>{collec.collection_name}</option>
-                                            )
-                                        }
-                                    })
-                                }
-                            </select>
-    
-                            <Tags searchResultTweetIDs={searchResultTweetIDs} searchQuery={searchQuery} userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id} prepAllTagsArray={prepAllTagsArray}/>
-                        </div>
-                    )
-                })
-                :null}{
-                    !search ?
                     tweetIds.map((id, index) => {
                     return(
                         <div className="tweek-box" key={index}>
@@ -311,11 +251,10 @@ const TweeksContainer = (props) => {
                                 }
                             </select>
     
-                            <Tags setSearchResultTweetIDs={setSearchResultTweetIDs} setSearchTweetIDs={setSearchTweetIDs} searchQuery={searchQuery} userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id} prepAllTagsArray={prepAllTagsArray}/>
+                            <Tags userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id}/>
                         </div>
                     )
                 })
-                :null
             }
 
             {

@@ -43,6 +43,15 @@ useEffect(() => {
 
 }, [props.getAllTags])
 
+useEffect(() => {
+    console.log(props.searchInput)
+    if(props.searchInput !== '' && props.searchInput !== 'All'){
+        if(tags.includes(props.searchInput)){
+            props.createSearchTweetIds(props.tweetID)
+        }
+    }
+}, [props.searchInput])
+
 async function addTags(){
     if(tagInput !== ''){
             await axios.post(`/api/v1/tags`, { 
@@ -124,7 +133,7 @@ async function deleteTag(tag){
                          }
                      }
                  }}>Done</button>
-                 <button onClick={() => showTagsForm(false)}>Cancel</button>
+                 <button onClick={(e) => {e.preventDefault();setShowTagsForm(false)}}>Cancel</button>
              </form>
              : null
          }

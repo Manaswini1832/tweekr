@@ -24,12 +24,18 @@ const TweeksContainer = (props) => {
     const [search, setSearch] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const [getAllTags, setGetAllTags] = useState(false);
+    const [showAllTags, setShowAllTags] = useState(false);
     const [allTags, setAllTags] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
+
+    //This function helps make all elements in an array unique
+    function arrMakeUnique(array){
+        return Array.from(new Set(array))
+    }
 
     useEffect(() => {
         setTweetIds([]);
@@ -62,6 +68,22 @@ const TweeksContainer = (props) => {
             setGetAllTags(true)
         }
     }, [search])
+
+    function changeSearch(arg){
+        if(arg === 'Make true'){
+            setSearch(true)
+        }else{
+            setSearch(false)
+        }
+    }
+
+    function changeGetAllTags(arg){
+        if(arg === 'Make true'){
+                setGetAllTags(true)
+        }else{
+            setGetAllTags(false)
+        }
+    }
 
     async function getUncatTweets(){
         let tweeksArray = [];
@@ -188,11 +210,30 @@ const TweeksContainer = (props) => {
     }
 
     function prepAllTagsArray(tagsArrFromTagsComponent, tweetIDReceived){
-        console.log(tagsArrFromTagsComponent);
-        console.log(tweetIDReceived);
+        // console.log(tagsArrFromTagsComponent);
+        // console.log(tweetIDReceived);
         setAllTags((prev) => {
-            return [...prev, ...tagsArrFromTagsComponent];
+            return arrMakeUnique([...prev, ...tagsArrFromTagsComponent]);
         })
+    }
+
+    function addChangesAllTagsArray(newTag, tweetIDReceived){
+        setAllTags((prev) => {
+            return arrMakeUnique([...prev, newTag]);
+        })
+    }
+
+    function editAllTagsArray(oldTag, editedTag, tweetIDReceived){
+        let tagsArr = allTags;
+        let tagIndex = tagsArr.indexOf(oldTag)
+        tagsArr[tagIndex] = editedTag;
+        setAllTags([])
+        setAllTags(arrMakeUnique(tagsArr));
+    }
+
+    function deleteFromAllTagsArray(tagToBeDeleted, tweetIDReceived){
+        let filteredTags = allTags.filter(eachTag => eachTag!==tagToBeDeleted);
+        setAllTags(arrMakeUnique(filteredTags));
     }
 
     return(
@@ -215,20 +256,24 @@ const TweeksContainer = (props) => {
             : null 
             }
 
-            <button onClick={() => {
-                if(search){
-                    setSearch(false)
-                }else{
-                    setSearch(true)
-                }
-            }}>Search click</button>
-
             {
                 !noTweeks && currColl[0].collection_name !== 'Uncategorized'
-                ? <form>
-                    <label>Search using tags:</label>
-                    <input onChange={(e) => setSearchInput(e.target.value)} type="text" value={searchInput}/>
-                </form>
+               ? <select onFocus={() => {
+                        setSearch(true)
+                        setShowAllTags(true)
+                    }} onChange={(e) => {
+                        setSearchInput(e.target.value);
+                        }}
+                        onBlur={() => {setSearch(false);setShowAllTags(false)}}>
+                            <option>Filter using tags</option>
+                   {
+                       showAllTags
+                       ? allTags.map((eachTag, index) => {
+                            return(<option key={index}>{eachTag}</option>)
+                        })
+                        : null
+                   }
+               </select> 
                 : null
             }
             {
@@ -254,7 +299,17 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
-                            <Tags prepAllTagsArray={prepAllTagsArray} getAllTags={getAllTags} userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id}/>
+                            <Tags 
+                            prepAllTagsArray={prepAllTagsArray} 
+                            addChangesAllTagsArray={addChangesAllTagsArray} 
+                            editAllTagsArray={editAllTagsArray} 
+                            deleteFromAllTagsArray={deleteFromAllTagsArray} 
+                            getAllTags={getAllTags} 
+                            userID={auth.uid} 
+                            tweetID={id} 
+                            changeSearch={changeSearch} 
+                            changeGetAllTags={changeGetAllTags} 
+                            collectionID={currColl[0].collection_id}/>
                         </div>
                     )
                 })

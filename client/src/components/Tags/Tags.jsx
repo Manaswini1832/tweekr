@@ -34,9 +34,14 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+    // console.log(tags)
+    if(props.getAllTags){
     props.prepAllTagsArray(tags, props.tweetID)
-}, [props.getAllTags]
-)
+    props.changeSearch('Make false')
+    props.changeGetAllTags('Make false')
+    }
+
+}, [props.getAllTags])
 
 async function addTags(){
     if(tagInput !== ''){
@@ -52,6 +57,7 @@ async function addTags(){
                     setTags((prevTag) => {
                         return [...prevTag, tagInput]
                     })
+                    props.addChangesAllTagsArray(tagInput, props.tweetID)
                     setTagInput('')
                 }else{
                     alert('Couldn\'t add the tag. Please try again!')
@@ -65,6 +71,7 @@ async function editTag(){
     const indexOfEditInp = tags.indexOf(beforeEditInput);
     tagsArr[indexOfEditInp] = afterEditInput;
     makeEditRequest(tagsArr);
+    props.editAllTagsArray(beforeEditInput, afterEditInput, props.tweetID);
 }
 
 async function makeEditRequest(tagsArr){
@@ -91,6 +98,7 @@ async function deleteTag(tag){
        if(res.data.message === "Sucessfully deleted tag!"){
            let filteredTags = tags.filter(eachTag => eachTag!==tag);
            setTags(filteredTags);
+           props.deleteFromAllTagsArray(tag, props.tweetID)
        }else{
            alert('Couldn\'t delete the tag. Please try again!')
        }
@@ -116,6 +124,7 @@ async function deleteTag(tag){
                          }
                      }
                  }}>Done</button>
+                 <button onClick={() => showTagsForm(false)}>Cancel</button>
              </form>
              : null
          }

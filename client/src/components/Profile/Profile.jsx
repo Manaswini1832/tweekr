@@ -4,6 +4,7 @@ import axios from "axios";
 import { Redirect } from "react-router-dom";
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
+import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
 import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
 import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
@@ -28,6 +29,7 @@ const Profile = () => {
     const [addTweek, setAddTweek] = useState(false);
     const [twID, setTwID] = useState(null);
     const {auth, setAuth} = useContext(AuthContext);
+    const allTags = useContext(AllTagsContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
@@ -38,6 +40,7 @@ const Profile = () => {
 
     useEffect(() => {
         validateUserEntry();
+        console.log(allTags);
     }, []);
 
     useEffect(() => {

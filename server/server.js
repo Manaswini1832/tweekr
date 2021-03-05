@@ -320,6 +320,31 @@ app.delete("/api/v1/tags", async(req, res) => {
     }
 })
 
+//To get all the tags in a collection
+app.get("/api/v1/getAllTags", async(req, res) => {
+    const userID = req.query.userID;
+    const collectionID = req.query.collectionID;
+    console.log(userID, collectionID)
+    try{
+        await postgresDb.query("SELECT tags FROM tweeks WHERE tweeks.user_id=$1 AND tweeks.collection_id=$2", 
+        [userID, collectionID]
+        ).then((response) => {
+            console.log(response.rows)
+            res.json({
+                "message" : "Successfully received all tags!",
+                "data" : response.rows 
+            })
+        })
+        .catch((err) => {
+            res.json({
+                "message" : "Failed to retrieve all tags"
+            })
+        })
+    }catch(err){
+        console.error(err)
+    }
+})
+
 //Listening on port
 app.listen(PORT, (req, res) => {
     console.log(`Server up and running on port ${PORT}`);

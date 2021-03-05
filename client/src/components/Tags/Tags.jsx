@@ -1,5 +1,6 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useContext} from "react";
 import axios from "axios";
+import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
 
 const Tags = (props) => {
 
@@ -9,6 +10,8 @@ const [tagInput, setTagInput] = useState('');
 const [beforeEditInput, setBeforeEditInput] = useState('');
 const [afterEditInput, setAfterEditInput] = useState('');
 const [tags, setTags] = useState([]);
+
+const {allTags, setAllTags, arrMakeUnique} = useContext(AllTagsContext);
 
 async function getTags(){
     if(props.tweetID && props.userID && props.collectionID){
@@ -33,25 +36,6 @@ useEffect(() => {
     getTags();
 }, []);
 
-useEffect(() => {
-    // console.log(tags)
-    if(props.getAllTags){
-    props.prepAllTagsArray(tags, props.tweetID)
-    props.changeSearch('Make false')
-    props.changeGetAllTags('Make false')
-    }
-
-}, [props.getAllTags])
-
-useEffect(() => {
-    console.log(props.searchInput)
-    if(props.searchInput !== '' && props.searchInput !== 'All'){
-        if(tags.includes(props.searchInput)){
-            props.createSearchTweetIds(props.tweetID)
-        }
-    }
-}, [props.searchInput])
-
 async function addTags(){
     if(tagInput !== ''){
             await axios.post(`/api/v1/tags`, { 
@@ -66,8 +50,10 @@ async function addTags(){
                     setTags((prevTag) => {
                         return [...prevTag, tagInput]
                     })
-                    props.addChangesAllTagsArray(tagInput, props.tweetID)
-                    setTagInput('')
+                    setTagInput('');
+                    setAllTags((prev) => {
+                        return arrMakeUnique([...prev, tagInput])
+                    })
                 }else{
                     alert('Couldn\'t add the tag. Please try again!')
                 }
@@ -80,7 +66,16 @@ async function editTag(){
     const indexOfEditInp = tags.indexOf(beforeEditInput);
     tagsArr[indexOfEditInp] = afterEditInput;
     makeEditRequest(tagsArr);
-    props.editAllTagsArray(beforeEditInput, afterEditInput, props.tweetID);
+    editAllTagsArray();
+
+}
+
+function editAllTagsArray() {
+    let tagsArr = allTags;
+    let tagIndex = tagsArr.indexOf(beforeEditInput)
+    tagsArr[tagIndex] = afterEditInput;
+    setAllTags([])
+    setAllTags(arrMakeUnique(tagsArr));
 }
 
 async function makeEditRequest(tagsArr){
@@ -107,12 +102,18 @@ async function deleteTag(tag){
        if(res.data.message === "Sucessfully deleted tag!"){
            let filteredTags = tags.filter(eachTag => eachTag!==tag);
            setTags(filteredTags);
-           props.deleteFromAllTagsArray(tag, props.tweetID)
+           deleteFromAllTagsArray(tag, props.tweetID)
        }else{
            alert('Couldn\'t delete the tag. Please try again!')
        }
    }) 
 }
+
+    function deleteFromAllTagsArray(tagToBeDeleted, tweetIDReceived){
+        let filteredTags = allTags.filter(eachTag => eachTag!==tagToBeDeleted);
+        setAllTags(arrMakeUnique(filteredTags));
+    }
+
 
    return(
        <div>

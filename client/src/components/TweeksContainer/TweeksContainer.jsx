@@ -4,6 +4,7 @@ import axios from "axios";
 import "./TweeksContainer.css";
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
+import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
 import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
 import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
@@ -23,25 +24,17 @@ const TweeksContainer = (props) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [newCollec, setNewCollec] = useState(null);
     const [noTweeks, setNoTweeks] = useState(false);
-    const [search, setSearch] = useState(false);
     const [searchInput, setSearchInput] = useState('');
-    const [getAllTags, setGetAllTags] = useState(false);
-    const [showAllTags, setShowAllTags] = useState(false);
-    const [allTags, setAllTags] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
 
-    //This function helps make all elements in an array unique
-    function arrMakeUnique(array){
-        return Array.from(new Set(array))
-    }
+    const {allTags, setAllTags} = useContext(AllTagsContext);
 
     useEffect(() => {
         setTweetIds([]);
-        setAllTags([]); 
         setLoading(true);
         if(currColl[0].collection_name === "Uncategorized") {
             getUncatTweets();
@@ -60,33 +53,14 @@ const TweeksContainer = (props) => {
                 setTweetIds((prev) => {
                     return [...prev, props.twID];
                 })
+                if(noTweeks){
+                    setNoTweeks(false)
+                }                
             }else{
                 console.log('Won\'t do anything because the tweet is already present')
             }
         }
     }, [props.twID]);
-
-    useEffect(() => {
-        if(search){
-            setGetAllTags(true)
-        }
-    }, [search])
-
-    function changeSearch(arg){
-        if(arg === 'Make true'){
-            setSearch(true)
-        }else{
-            setSearch(false)
-        }
-    }
-
-    function changeGetAllTags(arg){
-        if(arg === 'Make true'){
-                setGetAllTags(true)
-        }else{
-            setGetAllTags(false)
-        }
-    }
 
     async function getUncatTweets(){
         let tweeksArray = [];
@@ -212,41 +186,6 @@ const TweeksContainer = (props) => {
         }
     }
 
-    function prepAllTagsArray(tagsArrFromTagsComponent, tweetIDReceived){
-        // console.log(tagsArrFromTagsComponent);
-        // console.log(tweetIDReceived);
-        setAllTags((prev) => {
-            return arrMakeUnique([...prev, ...tagsArrFromTagsComponent]);
-        })
-    }
-
-    function addChangesAllTagsArray(newTag, tweetIDReceived){
-        setAllTags((prev) => {
-            return arrMakeUnique([...prev, newTag]);
-        })
-    }
-
-    function editAllTagsArray(oldTag, editedTag, tweetIDReceived){
-        let tagsArr = allTags;
-        let tagIndex = tagsArr.indexOf(oldTag)
-        tagsArr[tagIndex] = editedTag;
-        setAllTags([])
-        setAllTags(arrMakeUnique(tagsArr));
-    }
-
-    function deleteFromAllTagsArray(tagToBeDeleted, tweetIDReceived){
-        let filteredTags = allTags.filter(eachTag => eachTag!==tagToBeDeleted);
-        setAllTags(arrMakeUnique(filteredTags));
-    }
-
-    function createSearchTweetIds(id){
-        setSearchTweetIds([]);
-        console.log(id)
-        setSearchTweetIds((prev) => {
-            return arrMakeUnique([...prev, id]);
-        });
-        console.log(id)
-    }
     useEffect(() => {
         if(searchInput === 'All'){
                 setSearchTweetDisplay(false)
@@ -285,29 +224,28 @@ const TweeksContainer = (props) => {
                     <label htmlFor="tag-select">Filter using tags</label>
                     <select id="tag-select" 
                     onFocus={() => {
-                        setSearch(true)
+                        // setSearch(true)
                     }} 
                     onChange={(e) => {
                         const selectedIndex = e.target.options.selectedIndex;
                         let searchInp = e.target.options[selectedIndex].innerText;
                         setSearchInput(searchInp);
-                        // takeCareOfTweetDisplay(searchInp);
                     }}
-                    onBlur={() => {setSearch(false);setShowAllTags(false)}}
                     >
                     <option>All</option>
                     {
                         allTags.map((eachTag, index) => {
-                                return(<option key={index}>{eachTag}</option>)
-                            })
+                            return(
+                                <option key={index}>{eachTag}</option>
+                            )
+                        })
                     }
                     </select> 
                </div>
                 : null
             }
             {
-                    searchTweetsDisplay
-                    ?searchTweetIds.map((id, index) => {
+                    tweetIds.map((id, index) => {
                     return(
                         <div className="tweek-box" key={index}>
                             <Tweek tweetID={id} />
@@ -329,58 +267,10 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
-                            <Tags 
-                            prepAllTagsArray={prepAllTagsArray} 
-                            addChangesAllTagsArray={addChangesAllTagsArray} 
-                            editAllTagsArray={editAllTagsArray} 
-                            deleteFromAllTagsArray={deleteFromAllTagsArray} 
-                            getAllTags={getAllTags} 
-                            userID={auth.uid} 
-                            tweetID={id} 
-                            changeSearch={changeSearch} 
-                            changeGetAllTags={changeGetAllTags} 
+                            <Tags
+                            tweetID={id}
                             collectionID={currColl[0].collection_id}
-                            searchInput={searchInput} 
-                            createSearchTweetIds={createSearchTweetIds} 
-                            />
-                        </div>
-                    )
-                })
-                    :tweetIds.map((id, index) => {
-                    return(
-                        <div className="tweek-box" key={index}>
-                            <Tweek tweetID={id} />
-                            <select onChange={(e) => {
-                                const selectedIndex = e.target.options.selectedIndex;
-                                const collection_id = e.target.options[selectedIndex].getAttribute("data-collectionid");
-                                if(collection_id !== currColl[0].collection_id){
-                                    makePgRequest(collection_id, id);
-                                }
-                            }}>
-                                <option>Move into</option>
-                                {
-                                    collecNames.map((collec, index) => {
-                                        if(collec.collection_name){
-                                            return(
-                                                <option key={index} data-collectionid={collec.collection_id}>{collec.collection_name}</option>
-                                            )
-                                        }
-                                    })
-                                }
-                            </select>
-                            <Tags 
-                            prepAllTagsArray={prepAllTagsArray} 
-                            addChangesAllTagsArray={addChangesAllTagsArray} 
-                            editAllTagsArray={editAllTagsArray} 
-                            deleteFromAllTagsArray={deleteFromAllTagsArray} 
-                            getAllTags={getAllTags} 
-                            userID={auth.uid} 
-                            tweetID={id} 
-                            changeSearch={changeSearch} 
-                            changeGetAllTags={changeGetAllTags} 
-                            collectionID={currColl[0].collection_id}
-                            searchInput={searchInput} 
-                            createSearchTweetIds={createSearchTweetIds} 
+                            userID={auth.uid}
                             />
                         </div>
                     )

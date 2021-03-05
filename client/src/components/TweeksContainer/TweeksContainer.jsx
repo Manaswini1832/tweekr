@@ -21,7 +21,9 @@ const TweeksContainer = (props) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [newCollec, setNewCollec] = useState(null);
     const [noTweeks, setNoTweeks] = useState(false);
-    const [twIDToAdd, setTwIDToAdd] = useState(null);
+    const [search, setSearch] = useState(false);
+    const [searchInput, setSearchInput] = useState('');
+    const [getAllTags, setGetAllTags] = useState(false);
     const [allTags, setAllTags] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
@@ -31,8 +33,8 @@ const TweeksContainer = (props) => {
 
     useEffect(() => {
         setTweetIds([]);
-        setLoading(true);
         setAllTags([]); 
+        setLoading(true);
         if(currColl[0].collection_name === "Uncategorized") {
             getUncatTweets();
         }else{
@@ -41,31 +43,25 @@ const TweeksContainer = (props) => {
     }, [currColl]);
 
     useEffect(() => {
-        if(props.addTweek){
-            if(props.twID){
-                setTwIDToAdd(props.twID)
-            }
-        }
-    }, [props.addTweek]);
-
-    useEffect(() => {
-        if(twIDToAdd){
+        if(props.addTweek && props.twID){
             //If this tweet id is already in the page, do nothing
             //If not, add it to tweetIds array
-            const alreadyPresent = tweetIds.includes(twIDToAdd);
+            const alreadyPresent = tweetIds.includes(props.twID);
             if(!alreadyPresent) {
                 setTweetIds((prev) => {
-                    return [...prev, twIDToAdd];
+                    return [...prev, props.twID];
                 })
             }else{
                 console.log('Won\'t do anything because the tweet is already present')
             }
         }
-    }, [twIDToAdd]);
+    }, [props.twID]);
 
     useEffect(() => {
-        console.log(allTags)
-    }, [allTags])
+        if(search){
+            setGetAllTags(true)
+        }
+    }, [search])
 
     async function getUncatTweets(){
         let tweeksArray = [];
@@ -191,6 +187,14 @@ const TweeksContainer = (props) => {
         }
     }
 
+    function prepAllTagsArray(tagsArrFromTagsComponent, tweetIDReceived){
+        console.log(tagsArrFromTagsComponent);
+        console.log(tweetIDReceived);
+        setAllTags((prev) => {
+            return [...prev, ...tagsArrFromTagsComponent];
+        })
+    }
+
     return(
         <div>
             <button onClick={() => setModalOpen(true)}>New Collection</button>
@@ -208,25 +212,25 @@ const TweeksContainer = (props) => {
             {
             noTweeks
             ? <h1>No tweeks exist in this collection</h1>
-            : null
+            : null 
             }
+
+            <button onClick={() => {
+                if(search){
+                    setSearch(false)
+                }else{
+                    setSearch(true)
+                }
+            }}>Search click</button>
+
             {
-                currColl[0].collection_name !== "Uncategorized" && !noTweeks
+                !noTweeks && currColl[0].collection_name !== 'Uncategorized'
                 ? <form>
-                    <label>Search using tags :</label>
-                    <input onChange={(e) => {
-                        }} type="text"/>
-                    {
-                        // https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_js_dropdown_filter
-                        allTags.map((eachTag, index) => {
-                            return(
-                                <li key={index}>{eachTag}</li>
-                            )
-                        })
-                    }
+                    <label>Search using tags:</label>
+                    <input onChange={(e) => setSearchInput(e.target.value)} type="text" value={searchInput}/>
                 </form>
                 : null
-           }
+            }
             {
                     tweetIds.map((id, index) => {
                     return(
@@ -250,13 +254,11 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
-    
-                            <Tags userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id}/>
+                            <Tags prepAllTagsArray={prepAllTagsArray} getAllTags={getAllTags} userID={auth.uid} tweetID={id} collectionID={currColl[0].collection_id}/>
                         </div>
                     )
                 })
             }
-
             {
                 loading
                 ? <Loading />

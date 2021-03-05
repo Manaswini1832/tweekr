@@ -195,7 +195,7 @@ const Profile = () => {
                 setTwID(enteredID)
             }
         })
-    }    
+    } 
 
     return(
         <div>

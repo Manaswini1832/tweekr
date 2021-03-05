@@ -33,6 +33,11 @@ useEffect(() => {
     getTags();
 }, []);
 
+useEffect(() => {
+    props.prepAllTagsArray(tags, props.tweetID)
+}, [props.getAllTags]
+)
+
 async function addTags(){
     if(tagInput !== ''){
             await axios.post(`/api/v1/tags`, { 

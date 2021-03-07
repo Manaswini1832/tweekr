@@ -326,7 +326,7 @@ app.get("/api/v1/getAllTags", async(req, res) => {
     const collectionID = req.query.collectionID;
     console.log(userID, collectionID)
     try{
-        await postgresDb.query("SELECT tags FROM tweeks WHERE tweeks.user_id=$1 AND tweeks.collection_id=$2", 
+        await postgresDb.query("SELECT tweet_id,tags FROM tweeks WHERE tweeks.user_id=$1 AND tweeks.collection_id=$2", 
         [userID, collectionID]
         ).then((response) => {
             console.log(response.rows)
@@ -341,6 +341,29 @@ app.get("/api/v1/getAllTags", async(req, res) => {
             })
         })
     }catch(err){
+        console.error(err)
+    }
+})
+
+app.delete(`/api/v1/tweeks`, async(req, res) => {
+    const tweetID = req.query.tweetID;
+    const collectionID = req.query.collectionID;
+    const userID = req.query.userID;
+    try
+    {await postgresDb.query("DELETE FROM tweeks WHERE tweet_id=$1 AND user_id=$2 AND collection_id=$3",
+    [tweetID, userID, collectionID]
+    )
+    .then((response) => {
+        res.json({
+            "message" : "Sucessfully deleted tweek!"
+        })
+    })
+    .catch((err) => {
+        res.json({
+            "message" : "Failure! Couldn't delete tweek. Please try again!"
+        })
+    })}
+    catch(err){
         console.error(err)
     }
 })

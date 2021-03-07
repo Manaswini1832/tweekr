@@ -1,6 +1,7 @@
 import {useState, useEffect, useContext} from "react";
 import axios from "axios";
 import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
+import {SearchTweetIdsContext} from "../../contexts/SearchTweetIdsContext/SearchTweetIdsContext";
 
 const Tags = (props) => {
 
@@ -11,7 +12,8 @@ const [beforeEditInput, setBeforeEditInput] = useState('');
 const [afterEditInput, setAfterEditInput] = useState('');
 const [tags, setTags] = useState([]);
 
-const {allTags, setAllTags, arrMakeUnique} = useContext(AllTagsContext);
+const {allTags, setAllTags, arrMakeUnique, searchTags, setSearchTags, idsAndTags, setIdsAndTags} = useContext(AllTagsContext);
+const {searching, setSearching, searchIds, setSearchIds} = useContext(SearchTweetIdsContext);
 
 async function getTags(){
     if(props.tweetID && props.userID && props.collectionID){
@@ -36,6 +38,19 @@ useEffect(() => {
     getTags();
 }, []);
 
+// useEffect(() => {
+//     console.log(props.searchInput)
+//     // if(props.searchInput.length !== 0){
+//         // props.searchInput.map((searchQuery) => {
+//             if(tags.includes(props.searchInput["label"])){
+//                 setSearchIds((prev) => {
+//                     return [...prev, props.tweetID]
+//                 })
+//             }
+//         // })
+// // }
+// }, [props.searchInput])
+
 async function addTags(){
     if(tagInput !== ''){
             await axios.post(`/api/v1/tags`, { 
@@ -54,6 +69,16 @@ async function addTags(){
                     setAllTags((prev) => {
                         return arrMakeUnique([...prev, tagInput])
                     })
+                    setSearchTags((prev) => {
+                        return [...prev, {
+                            "label" : tagInput,
+                            "value" : tagInput,
+                        }]
+                    })
+                    let idsTagsObj = idsAndTags;
+                    const reqdObjIndex = idsTagsObj.findIndex(x => x.tweet_id === props.tweetID)
+                    idsTagsObj[reqdObjIndex]["tags"].push(tagInput)
+                    setIdsAndTags(idsTagsObj)
                 }else{
                     alert('Couldn\'t add the tag. Please try again!')
                 }
@@ -67,7 +92,6 @@ async function editTag(){
     tagsArr[indexOfEditInp] = afterEditInput;
     makeEditRequest(tagsArr);
     editAllTagsArray();
-
 }
 
 function editAllTagsArray() {
@@ -76,6 +100,19 @@ function editAllTagsArray() {
     tagsArr[tagIndex] = afterEditInput;
     setAllTags([])
     setAllTags(arrMakeUnique(tagsArr));
+    
+    let searchTagsArr = searchTags;
+    let searchTagIndex = searchTagsArr.findIndex(x => x.label === beforeEditInput);
+    searchTagsArr[searchTagIndex]["label"] = afterEditInput;
+    searchTagsArr[searchTagIndex]["value"] = afterEditInput;
+    setSearchTags([])
+    setSearchTags(searchTagsArr);
+
+    let idsTagsObj = idsAndTags;
+    const reqdObjIndex = idsTagsObj.findIndex(x => x.tags.includes(beforeEditInput));
+    const indexOfTag = idsTagsObj[reqdObjIndex]["tags"].indexOf(beforeEditInput);
+    idsTagsObj[reqdObjIndex]["tags"][indexOfTag] = afterEditInput;
+    setIdsAndTags(idsTagsObj);
 }
 
 async function makeEditRequest(tagsArr){
@@ -112,6 +149,18 @@ async function deleteTag(tag){
     function deleteFromAllTagsArray(tagToBeDeleted, tweetIDReceived){
         let filteredTags = allTags.filter(eachTag => eachTag!==tagToBeDeleted);
         setAllTags(arrMakeUnique(filteredTags));
+
+        let searchTagsFiltered = searchTags.filter(eachTag => eachTag["label"]!==tagToBeDeleted);
+        setSearchTags(arrMakeUnique(searchTagsFiltered));
+
+        let idsTagsArr = idsAndTags;
+        idsTagsArr.forEach((entry) => {
+            if(entry["tags"].includes(tagToBeDeleted)){
+                //Delete that tag
+                entry["tags"] = entry["tags"].filter(eachTag => eachTag!==tagToBeDeleted);
+            }
+        })
+        setIdsAndTags(idsTagsArr)
     }
 
 

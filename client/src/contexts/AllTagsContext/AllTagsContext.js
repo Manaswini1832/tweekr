@@ -8,6 +8,8 @@ export const AllTagsContext = React.createContext(null);
 export const AllTagsContextProvider = (props) => {
 
     const [allTags, setAllTags] = useState([]);
+    const [idsAndTags, setIdsAndTags] = useState([]);
+    const [searchTags, setSearchTags] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
 
@@ -21,12 +23,19 @@ export const AllTagsContextProvider = (props) => {
         await axios.get(`/api/v1/getAllTags?userID=${auth.uid}&collectionID=${currColl[0].collection_id}`)
         .then((res) => {
             const allTagsArr = res.data.data;
+            setIdsAndTags(allTagsArr);
             allTagsArr.forEach((each) => {
                 const eachArr = each?.tags;
                 if(eachArr){
                     eachArr.forEach((tag) => {
                     setAllTags((prev) => {
                         return arrMakeUnique([...prev, tag])
+                    })
+                    let searchObj = {};
+                    searchObj["label"] = tag;
+                    searchObj["value"] = tag;
+                    setSearchTags((prev) => {
+                        return arrMakeUnique([...prev, searchObj])
                     })
                 })
                 }
@@ -39,11 +48,14 @@ export const AllTagsContextProvider = (props) => {
 
     useEffect(() => {
         setAllTags([])
+        setSearchTags([]);
         getTagsOfCollection();
     }, [currColl])
 
     return(
-        <AllTagsContext.Provider value={{allTags, setAllTags, arrMakeUnique}}>
+        <AllTagsContext.Provider value={{
+            allTags, setAllTags, arrMakeUnique, searchTags, setSearchTags, idsAndTags, setIdsAndTags, getTagsOfCollection
+            }}>
             {props.children}
         </AllTagsContext.Provider>
     )

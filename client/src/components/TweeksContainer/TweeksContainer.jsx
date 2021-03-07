@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-
+import Select from "react-select";
 import "./TweeksContainer.css";
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
@@ -8,40 +8,47 @@ import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
 import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
 import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
+import {SearchTweetIdsContext} from "../../contexts/SearchTweetIdsContext/SearchTweetIdsContext";
 
 import Tweek from "../Tweek/Tweek";
 import Loading from "../Loading/Loading";
 import Modal from "../Modal/Modal";
 import Tags from "../Tags/Tags";
 import { set } from "js-cookie";
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const TweeksContainer = (props) => {
 
     const [tweetIds, setTweetIds] = useState([]);
-    const [searchTweetIds, setSearchTweetIds] = useState([]);
-    const [searchTweetsDisplay, setSearchTweetDisplay] = useState(false);
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [newCollec, setNewCollec] = useState(null);
     const [noTweeks, setNoTweeks] = useState(false);
-    const [searchInput, setSearchInput] = useState('');
+    const [searchInput, setSearchInput] = useState([]);
     const {auth, setAuth} = useContext(AuthContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
     const firebase = useContext(BaseContext);
     const db = firebase.db;
 
-    const {allTags, setAllTags} = useContext(AllTagsContext);
+    const {allTags, setAllTags, arrMakeUnique, searchTags, idsAndTags, setIdsAndTags, getTagsOfCollection} = useContext(AllTagsContext);
+    const {searching, setSearching, searchIds, setSearchIds} = useContext(SearchTweetIdsContext);
+    const [searchResultTweetIds, setSearchResultTweetIds] = useState([]); //Just to make sure that tweets re render
 
     useEffect(() => {
         setTweetIds([]);
         setLoading(true);
         if(currColl[0].collection_name === "Uncategorized") {
             getUncatTweets();
-            setSearchTweetDisplay(false);
         }else{
             getCollecTweeks();
         }
+                setIdsAndTags((prev) => {
+                    return arrMakeUnique([...prev, {
+                        tags : [],
+                        tweet_id : props.twID
+                    }])
+                })
     }, [currColl]);
 
     useEffect(() => {
@@ -56,6 +63,12 @@ const TweeksContainer = (props) => {
                 if(noTweeks){
                     setNoTweeks(false)
                 }                
+                setIdsAndTags((prev) => {
+                    return arrMakeUnique([...prev, {
+                        tags : [],
+                        tweet_id : props.twID
+                    }])
+                })
             }else{
                 console.log('Won\'t do anything because the tweet is already present')
             }
@@ -106,6 +119,14 @@ const TweeksContainer = (props) => {
         setTweetIds([]);
         setTweetIds(arrToBeDeleted);
     }
+
+    useEffect(() => {
+        idsAndTags.forEach((each) => {
+            if(each["tags"] === null){
+                each["tags"] = [];
+            }
+        })
+    }, [idsAndTags])
 
     async function makePgRequest(idOfCollection, idOfTweet){
             try {
@@ -187,16 +208,29 @@ const TweeksContainer = (props) => {
     }
 
     useEffect(() => {
-        if(searchInput === 'All'){
-                setSearchTweetDisplay(false)
-            }else{
-                setSearchTweetDisplay(true)
+        if(searchInput.length === 0){
+            setSearchIds([])
+            setSearchResultTweetIds([])
+            setSearching(false);
+        }else if(searchInput.length >= 1){
+            setSearching(true);
+            setSearchIds([])
+            idsAndTags.forEach((idTagObj) => {
+            searchInput.forEach((inp) => {
+            if(idTagObj.tags.includes(inp["label"])){
+                console.log(idTagObj["tweet_id"])
+                setSearchIds((prev) => {
+                    return arrMakeUnique([...prev, idTagObj["tweet_id"]]);
+                })
             }
-    }, [searchInput]);
+            })
+        })
+        setSearchResultTweetIds([])}
+    }, [searchInput])
 
     useEffect(() => {
-        console.log(searchTweetIds)
-    }, [searchTweetIds])
+        setSearchResultTweetIds(searchIds);
+    }, [searchIds])
 
     return(
         <div>
@@ -221,31 +255,61 @@ const TweeksContainer = (props) => {
             {
                 !noTweeks && currColl[0].collection_name !== 'Uncategorized'
                ? <div>
-                    <label htmlFor="tag-select">Filter using tags</label>
-                    <select id="tag-select" 
-                    onFocus={() => {
-                        // setSearch(true)
-                    }} 
-                    onChange={(e) => {
-                        const selectedIndex = e.target.options.selectedIndex;
-                        let searchInp = e.target.options[selectedIndex].innerText;
-                        setSearchInput(searchInp);
-                    }}
-                    >
-                    <option>All</option>
-                    {
-                        allTags.map((eachTag, index) => {
-                            return(
-                                <option key={index}>{eachTag}</option>
-                            )
-                        })
-                    }
-                    </select> 
+                    <Select
+                    placeholder={<div>Filter using tags</div>}
+                    options={searchTags}
+                    isMulti
+                    noOptionsMessage = {() => 'No tags to show'}
+                    onChange={(selectedOptions) => setSearchInput(selectedOptions)}
+                    />
                </div>
                 : null
             }
             {
-                    tweetIds.map((id, index) => {
+                    searching
+                    ? searchResultTweetIds.map((id, index) => {
+                    return(
+                        <div className="tweek-box" key={index}>
+                            <button><DeleteIcon/></button>
+                            <Tweek tweetID={id} />
+                            <select onChange={(e) => {
+                                const selectedIndex = e.target.options.selectedIndex;
+                                const collection_id = e.target.options[selectedIndex].getAttribute("data-collectionid");
+                                if(collection_id !== currColl[0].collection_id){
+                                    makePgRequest(collection_id, id);
+                                }
+                            }}>
+                                <option>Move into</option>
+                                {
+                                    collecNames.map((collec, index) => {
+                                        if(collec.collection_name){
+                                            return(
+                                                <option key={index} data-collectionid={collec.collection_id}>{collec.collection_name}</option>
+                                            )
+                                        }
+                                    })
+                                }
+                            </select>
+                            {
+                                currColl[0].collection_name !== "Uncategorized"
+                                ?
+                                <Tags
+                                tweetID={id}
+                                collectionID={currColl[0].collection_id}
+                                userID={auth.uid}
+                                searchInput={searchInput}
+                                />
+                            : null
+                            }
+
+                        </div>
+                    )
+                })
+                :  null 
+            }
+            {
+                !searching
+                ? tweetIds.map((id, index) => {
                     return(
                         <div className="tweek-box" key={index}>
                             <Tweek tweetID={id} />
@@ -267,14 +331,20 @@ const TweeksContainer = (props) => {
                                     })
                                 }
                             </select>
-                            <Tags
-                            tweetID={id}
-                            collectionID={currColl[0].collection_id}
-                            userID={auth.uid}
-                            />
+                                                        {
+                                currColl[0].collection_name !== "Uncategorized"
+                                ?<Tags
+                                tweetID={id}
+                                collectionID={currColl[0].collection_id}
+                                userID={auth.uid}
+                                searchInput={searchInput}
+                                />
+                            : null
+                            }
                         </div>
                     )
                 })
+                : null
             }
             {
                 loading

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import "./Tweek.css";
+
+import {ThemeContext} from "../../contexts/ThemeContext/ThemeContext";
 
 const Tweek = (props) => {
     const tweetID = props.tweetID;
     const anchorTag = `https://twitter.com/x/status/${tweetID}`;
 
+    const {theme, setTheme, changeTheme} = useContext(ThemeContext);
     //state to display a loading screen while tweeks load
     const [loading, setLoading] = useState(true);
 
@@ -29,7 +32,7 @@ const Tweek = (props) => {
         <div>
          {my_script
          ? 
-         <blockquote className="twitter-tweet tweek">
+        <blockquote data-theme={theme} className="twitter-tweet tweek">
                 <a href={anchorTag}></a>
           </blockquote>  
          : null}

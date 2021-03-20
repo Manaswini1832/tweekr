@@ -166,18 +166,41 @@ app.post("/api/v1/moveTweek", async(req, res) => {
         const tweet_id = req.body.tweek_info.tweet_id;
         const user_id = req.body.tweek_info.user_id;
         const collection_id = req.body.tweek_info.collection_id;
-        await postgresDb.query("INSERT INTO tweeks (tweet_id, user_id, collection_id) VALUES ($1, $2, $3)", [tweet_id, user_id, collection_id])
-            .then(() => {
+        const currCollectionName = req.body.tweek_info.curr_collection_name;
+        if(currCollectionName === 'Uncategorized') {
+        //If this request came from Uncat collection, make a new entry in tweeks table
+           await postgresDb.query("INSERT INTO tweeks (tweet_id, user_id, collection_id) VALUES ($1,$2,$3)",
+           [tweet_id, user_id, collection_id])
+           .then(() => {
                 res.json({
-                    "message" : "Successfully moved tweek!",
+                    "message" : "Successfully moved tweek!"
                 })
-            })
-            .catch((err) => {
-                res.json({
-                    "message" : "Failed to move tweek. Please try again!"
+           }) 
+           .catch((err) => {
+               res.json({
+                   "message" : "Failed to move tweek. Please try again!"
+               })
+               console.error(err)
+           })
+
+            }else{
+            //If this request didn't come from Uncat collection, update collection_id entry instead of creating a new entry for the moved tweek in the tweeks table
+            await postgresDb.query("UPDATE tweeks SET collection_id = $1 WHERE user_id=$2 AND tweet_id = $3",
+            [collection_id, user_id, tweet_id])
+                .then(async() => {
+                    res.json({
+                        "message" : "Successfully moved tweek!",
+                    })
+
+                    //delete from current collection
                 })
-                console.error(err);
-            })
+                .catch((err) => {
+                    res.json({
+                        "message" : "Failed to move tweek. Please try again!"
+                    })
+                    console.error(err);
+                })
+        }
 
     } catch (err) {
         console.error(err);
@@ -216,6 +239,7 @@ app.get("/api/v1/tweeks", async(req, res) => {
     try {
         const collection_id = req.query.collection_id;
         const user_id = req.query.user_id;
+        console.log(collection_id, user_id)
         await postgresDb.query("SELECT tweek_serial_number, tweet_id, tweeks.user_id, tweeks.collection_id FROM tweeks WHERE tweeks.user_id = $1 AND tweeks.collection_id = $2 ORDER BY tweek_serial_number ASC", [user_id, collection_id])
                 .then((response) => {
                     res.json({
@@ -234,116 +258,116 @@ app.get("/api/v1/tweeks", async(req, res) => {
     }
 });
 
-//Get tags
-app.get("/api/v1/tags", async(req, res) => {
-    const userID = req.query.userID;
-    const tweetID = req.query.tweetID;
-    const collectionID = req.query.collectionID;
-    try {
-        await postgresDb.query("SELECT tweeks.tags FROM tweeks WHERE tweeks.user_id = $1 AND tweeks.tweet_id = $2 AND tweeks.collection_id=$3", [userID, tweetID, collectionID])
-        .then((response) => {
-            res.json({
-                "message" : "Successfully retrieved tags!",
-                "data" : response.rows 
-            })
-        })
-    } catch (err) {
-        console.error(err)
-    }
-})
+// //Get tags
+// app.get("/api/v1/tags", async(req, res) => {
+//     const userID = req.query.userID;
+//     const tweetID = req.query.tweetID;
+//     const collectionID = req.query.collectionID;
+//     try {
+//         await postgresDb.query("SELECT tweeks.tags FROM tweeks WHERE tweeks.user_id = $1 AND tweeks.tweet_id = $2 AND tweeks.collection_id=$3", [userID, tweetID, collectionID])
+//         .then((response) => {
+//             res.json({
+//                 "message" : "Successfully retrieved tags!",
+//                 "data" : response.rows 
+//             })
+//         })
+//     } catch (err) {
+//         console.error(err)
+//     }
+// })
 
-//Create tags
-app.post("/api/v1/tags", async(req, res) => {
-    const tags = req.body.tweek_info.tags;
-    const tweet_id = req.body.tweek_info.tweet_id;
-    const user_id = req.body.tweek_info.user_id;
-    try {
-        await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2 AND user_id=$3', [tags, tweet_id, user_id])
-        .then((response) => {
-            res.json({
-                'message' : 'Successfully added tags!'
-            })
-        })
-        .catch((err) => {
-            res.json({
-                'message' : 'Failed to add tags. Please try again!'
-            })
-        })
-    } catch (err) {
-        console.error(err)
-    }
-})
+// //Create tags
+// app.post("/api/v1/tags", async(req, res) => {
+//     const tags = req.body.tweek_info.tags;
+//     const tweet_id = req.body.tweek_info.tweet_id;
+//     const user_id = req.body.tweek_info.user_id;
+//     try {
+//         await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2 AND user_id=$3', [tags, tweet_id, user_id])
+//         .then((response) => {
+//             res.json({
+//                 'message' : 'Successfully added tags!'
+//             })
+//         })
+//         .catch((err) => {
+//             res.json({
+//                 'message' : 'Failed to add tags. Please try again!'
+//             })
+//         })
+//     } catch (err) {
+//         console.error(err)
+//     }
+// })
 
-//Edit tag
-app.put("/api/v1/tags", async(req, res) => {
-    const tags = req.body.tweek_info.tags;
-    const tweet_id = req.body.tweek_info.tweet_id;
-    const user_id = req.body.tweek_info.user_id;
-    try {
-        await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2 AND user_id=$3', [tags, tweet_id, user_id])
-        .then((response) => {
-            res.json({
-                'message' : 'Successfully edited tag!'
-            })
-        })
-        .catch((err) => {
-            res.json({
-                'message' : 'Failed to edit tag. Please try again!'
-            })
-        })
-    } catch (err) {
-        console.error(err)
-    }
-})
+// //Edit tag
+// app.put("/api/v1/tags", async(req, res) => {
+//     const tags = req.body.tweek_info.tags;
+//     const tweet_id = req.body.tweek_info.tweet_id;
+//     const user_id = req.body.tweek_info.user_id;
+//     try {
+//         await postgresDb.query('UPDATE tweeks SET tags=$1 WHERE tweet_id=$2 AND user_id=$3', [tags, tweet_id, user_id])
+//         .then((response) => {
+//             res.json({
+//                 'message' : 'Successfully edited tag!'
+//             })
+//         })
+//         .catch((err) => {
+//             res.json({
+//                 'message' : 'Failed to edit tag. Please try again!'
+//             })
+//         })
+//     } catch (err) {
+//         console.error(err)
+//     }
+// })
 
-//Delete tag
-app.delete("/api/v1/tags", async(req, res) => {
-    const tagToDelete = req.query.tagToDelete;
-    const tweet_id = req.query.tweetID;
-    const user_id = req.query.userID;
-    const collection_id = req.query.collectionID;
-    try{
-        await postgresDb.query("UPDATE tweeks SET tags=array_remove(tags, $1) WHERE tweeks.tweet_id=$2 AND tweeks.user_id=$3 AND tweeks.collection_id=$4",
-        [tagToDelete, tweet_id, user_id, collection_id]
-        ).then((response) => {
-            res.json({
-                "message" : "Sucessfully deleted tag!"
-            })
-        })
-        .catch((err) => {
-            res.json({
-                "message" : "Failed to delete tag. Please try again!"
-            })
-        })
-    }catch(err){
-        console.error(err)
-    }
-})
+// //Delete tag
+// app.delete("/api/v1/tags", async(req, res) => {
+//     const tagToDelete = req.query.tagToDelete;
+//     const tweet_id = req.query.tweetID;
+//     const user_id = req.query.userID;
+//     const collection_id = req.query.collectionID;
+//     try{
+//         await postgresDb.query("UPDATE tweeks SET tags=array_remove(tags, $1) WHERE tweeks.tweet_id=$2 AND tweeks.user_id=$3 AND tweeks.collection_id=$4",
+//         [tagToDelete, tweet_id, user_id, collection_id]
+//         ).then((response) => {
+//             res.json({
+//                 "message" : "Sucessfully deleted tag!"
+//             })
+//         })
+//         .catch((err) => {
+//             res.json({
+//                 "message" : "Failed to delete tag. Please try again!"
+//             })
+//         })
+//     }catch(err){
+//         console.error(err)
+//     }
+// })
 
-//To get all the tags in a collection
-app.get("/api/v1/getAllTags", async(req, res) => {
-    const userID = req.query.userID;
-    const collectionID = req.query.collectionID;
-    console.log(userID, collectionID)
-    try{
-        await postgresDb.query("SELECT tweet_id,tags FROM tweeks WHERE tweeks.user_id=$1 AND tweeks.collection_id=$2", 
-        [userID, collectionID]
-        ).then((response) => {
-            console.log(response.rows)
-            res.json({
-                "message" : "Successfully received all tags!",
-                "data" : response.rows 
-            })
-        })
-        .catch((err) => {
-            res.json({
-                "message" : "Failed to retrieve all tags"
-            })
-        })
-    }catch(err){
-        console.error(err)
-    }
-})
+// //To get all the tags in a collection
+// app.get("/api/v1/getAllTags", async(req, res) => {
+//     const userID = req.query.userID;
+//     const collectionID = req.query.collectionID;
+//     console.log(userID, collectionID)
+//     try{
+//         await postgresDb.query("SELECT tweet_id,tags FROM tweeks WHERE tweeks.user_id=$1 AND tweeks.collection_id=$2", 
+//         [userID, collectionID]
+//         ).then((response) => {
+//             console.log(response.rows)
+//             res.json({
+//                 "message" : "Successfully received all tags!",
+//                 "data" : response.rows 
+//             })
+//         })
+//         .catch((err) => {
+//             res.json({
+//                 "message" : "Failed to retrieve all tags"
+//             })
+//         })
+//     }catch(err){
+//         console.error(err)
+//     }
+// })
 
 app.delete(`/api/v1/tweeks`, async(req, res) => {
     const tweetID = req.query.tweetID;
@@ -355,7 +379,7 @@ app.delete(`/api/v1/tweeks`, async(req, res) => {
     )
     .then((response) => {
         res.json({
-            "message" : "Sucessfully deleted tweek!"
+            "message" : "Successfully deleted tweek!"
         })
     })
     .catch((err) => {

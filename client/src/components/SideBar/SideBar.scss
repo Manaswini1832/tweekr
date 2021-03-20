@@ -1,0 +1,65 @@
+@import "../../utils/_variables.scss";
+
+.sidebar_list {
+  list-style: none;
+  padding-left: 0;
+  padding: 0.5rem;
+}
+
+.sidebar_list_item {
+  cursor: pointer;
+  padding: 0.6rem;
+  border-radius: 7px;
+  display: inline-block;
+  width: 60%;
+  display: flex;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.new_collec_btn {
+  background-color: $blue_accent;
+  border-style: none;
+}
+
+.light_sidebar {
+  background-color: $light_sidebar_bg;
+  color: $light_sidebar_color;
+
+  .sidebar_list_item {
+    background-color: $light_sidebar_list_bg;
+  }
+
+  .sidebar_list_border_put {
+    border: 1px solid $light_sidebar_list_border;
+  }
+
+  .sidebar_list_border_remove {
+    border: 1px solid $light_sidebar_list_bg;
+  }
+
+  // .sidebar_list_icons {
+  //   background-color: $light_sidebar_list_bg;
+  // }
+}
+
+.dark_sidebar {
+  background-color: $dark_sidebar_bg;
+  color: $dark_sidebar_color;
+
+  .sidebar_list_item {
+    background-color: $dark_sidebar_list_bg;
+  }
+
+  .sidebar_list_border_put {
+    border: 1px solid $dark_sidebar_list_border;
+  }
+
+  .sidebar_list_border_remove {
+    border: 1px solid $dark_sidebar_list_bg;
+  }
+
+  // .sidebar_list_icons {
+  //   background-color: $dark_sidebar_list_bg;
+  // }
+}

@@ -5,6 +5,8 @@ import Login from "../Login/Login";
 import Profile from "../Profile/Profile";
 import My404Component from "../My404Component/My404Component";
 
+import "./App.scss"
+
 const App = () => {
     return(
             <Router>

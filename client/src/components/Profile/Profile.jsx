@@ -2,18 +2,19 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Redirect } from "react-router-dom";
+import WbSunnyIcon from '@material-ui/icons/WbSunny';
+import Brightness2Icon from '@material-ui/icons/Brightness2';
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
-import {AllTagsContext} from "../../contexts/AllTagsContext/AllTagsContext";
-import { BaseContext } from "../../contexts/BaseContext/BaseContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
 import { CurrCollContext } from "../../contexts/CurrCollContext/CurrCollContext";
+import {ThemeContext} from "../../contexts/ThemeContext/ThemeContext";
 
 import SideBar from "../SideBar/SideBar";
 import TweeksContainer from "../TweeksContainer/TweeksContainer";
 import Modal from "../Modal/Modal";
-import { set } from "js-cookie";
 
+import "./Profile.scss";
 
 const Profile = () => {
 
@@ -29,18 +30,15 @@ const Profile = () => {
     const [addTweek, setAddTweek] = useState(false);
     const [twID, setTwID] = useState(null);
     const {auth, setAuth} = useContext(AuthContext);
-    const allTags = useContext(AllTagsContext);
     const {collecNames, setCollecNames} = useContext(CollecNamesContext);
     const {currColl, setCurrColl} = useContext(CurrCollContext);
-    const firebase = useContext(BaseContext);
-    const db = firebase.db
+    const {theme, setTheme, changeTheme} = useContext(ThemeContext);
 
     const [showLoader, setShowLoader] = useState(true);
     const [showUnauth, setShowUnauth] = useState(false);
 
     useEffect(() => {
         validateUserEntry();
-        console.log(allTags);
     }, []);
 
     useEffect(() => {
@@ -210,6 +208,11 @@ const Profile = () => {
             <button onClick={signUserOut}>Sign out</button>
             <a href="https://twitter.com/home"><button>Go to Twitter</button></a>
             <h1>{currColl[0].collection_name}</h1>
+            <button onClick={changeTheme}>{
+                theme === "light"
+                ? <WbSunnyIcon />
+                : <Brightness2Icon/>
+            }</button>
             <SideBar editCollec={editCollec} setShowDeleteCollecModal={setShowDeleteCollecModal} setCollecIDToDelete={setCollecIDToDelete}/>
             {
                 showTweekAddForm

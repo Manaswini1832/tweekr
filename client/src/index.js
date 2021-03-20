@@ -5,23 +5,20 @@ import { BaseContextProvider } from "./contexts/BaseContext/BaseContext";
 import { AuthContextProvider } from "./contexts/AuthContext/AuthContext";
 import { CurrCollContextProvider } from "./contexts/CurrCollContext/CurrCollContext";
 import { CollecNamesContextProvider } from "./contexts/CollecNamesContext/CollecNamesContext";
-import {AllTagsContextProvider} from "./contexts/AllTagsContext/AllTagsContext";
-import {SearchTweetIdsContextProvider} from "./contexts/SearchTweetIdsContext/SearchTweetIdsContext";
+import {ThemeContextProvider } from "./contexts/ThemeContext/ThemeContext";
 
 ReactDOM.render(
     <BaseContextProvider>
       <AuthContextProvider>
+        <ThemeContextProvider>
         <CollecNamesContextProvider>
           <CurrCollContextProvider>
-            <AllTagsContextProvider>
-              <SearchTweetIdsContextProvider>
               <React.StrictMode>
                 <App />
               </React.StrictMode>
-              </SearchTweetIdsContextProvider>
-              </AllTagsContextProvider>
             </CurrCollContextProvider>
           </CollecNamesContextProvider>
+          </ThemeContextProvider>
         </AuthContextProvider>
     </BaseContextProvider>,
   document.getElementById('root')

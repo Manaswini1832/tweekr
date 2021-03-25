@@ -2,8 +2,16 @@
 
 .sidebar_list {
   list-style: none;
-  padding-left: 0;
+  // padding-left: 0;
   padding: 0.5rem;
+}
+
+.new_collec_btn {
+  background-color: $blue_accent;
+  border-style: none;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 7px;
 }
 
 .sidebar_list_item {
@@ -17,14 +25,27 @@
   margin-top: 1rem;
 }
 
-.new_collec_btn {
-  background-color: $blue_accent;
-  border-style: none;
+.common_sidebar {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  transition: all 0.4s ease;
+
+  .new_collec_btn {
+    color: #fff;
+  }
+}
+
+.sidebar_list_item {
+  width: 100%;
 }
 
 .light_sidebar {
   background-color: $light_sidebar_bg;
   color: $light_sidebar_color;
+  border-right: 3px solid $light_sidebar_bg;
 
   .sidebar_list_item {
     background-color: $light_sidebar_list_bg;
@@ -37,15 +58,12 @@
   .sidebar_list_border_remove {
     border: 1px solid $light_sidebar_list_bg;
   }
-
-  // .sidebar_list_icons {
-  //   background-color: $light_sidebar_list_bg;
-  // }
 }
 
 .dark_sidebar {
   background-color: $dark_sidebar_bg;
   color: $dark_sidebar_color;
+  border-right: 3px solid $dark_sidebar_list_bg;
 
   .sidebar_list_item {
     background-color: $dark_sidebar_list_bg;
@@ -58,8 +76,26 @@
   .sidebar_list_border_remove {
     border: 1px solid $dark_sidebar_list_bg;
   }
+}
 
-  // .sidebar_list_icons {
-  //   background-color: $dark_sidebar_list_bg;
-  // }
+.sidebar_close_sidebar_btn {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .show_sidebar {
+    .common_sidebar {
+      left: 0;
+    }
+  }
+
+  .hide_sidebar {
+    .common_sidebar {
+      left: -100%;
+    }
+  }
+
+  .sidebar_close_sidebar_btn {
+    display: block;
+  }
 }

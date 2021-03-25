@@ -4,6 +4,7 @@ import axios from "axios";
 import { Redirect } from "react-router-dom";
 import WbSunnyIcon from '@material-ui/icons/WbSunny';
 import Brightness2Icon from '@material-ui/icons/Brightness2';
+import MenuIcon from '@material-ui/icons/Menu';
 
 import { AuthContext } from "../../contexts/AuthContext/AuthContext";
 import { CollecNamesContext } from "../../contexts/CollecNamesContext/CollecNamesContext";
@@ -36,6 +37,7 @@ const Profile = () => {
 
     const [showLoader, setShowLoader] = useState(true);
     const [showUnauth, setShowUnauth] = useState(false);
+    const [clicked, setClicked] = useState(false);
 
     useEffect(() => {
         validateUserEntry();
@@ -198,8 +200,20 @@ const Profile = () => {
         })
     } 
 
+    function sideBarToggle(){
+        if(clicked){
+                setClicked(false)
+            }else{
+                setClicked(true)
+            }
+    }
+
     return(
-        <div>
+        <div className={theme === "light" ? "main-profile_container_light" : "main_profile_container_dark"}>
+        <div className={theme === "light" ? "profile_light_container profile_container_common_styles" : "profile_dark_container profile_container_common_styles"}>
+        <button className="profile_sidebar_toggle_btn" onClick={sideBarToggle}>
+            <MenuIcon/>
+        </button>
         {
             showLoader
             ? <h1>Loading .....</h1>
@@ -213,13 +227,16 @@ const Profile = () => {
                 ? <WbSunnyIcon />
                 : <Brightness2Icon/>
             }</button>
-            <SideBar editCollec={editCollec} setShowDeleteCollecModal={setShowDeleteCollecModal} setCollecIDToDelete={setCollecIDToDelete}/>
+            <SideBar onClick={() => {
+                if(clicked){setClicked(true)}
+                else{setClicked(false)}
+            }} sidebar_toggle_btn={clicked} set_sidebar_toggle={setClicked} editCollec={editCollec} setShowDeleteCollecModal={setShowDeleteCollecModal} setCollecIDToDelete={setCollecIDToDelete}/>
             {
                 showTweekAddForm
-                ?  <form onSubmit={makeTweek}>
+                ?  <form className={theme === "light" ? "profile_light_form profile_form_common_styles" : "profile_dark_form profile_form_common_styles"} onSubmit={makeTweek}>
                     <label>Paste tweet URL</label>
-                    <input onChange={e => setUrl(e.target.value)} type="text" value={url}/>
-                    <button type="submit">Add</button>
+                    <input className="profile_form_input" onChange={e => setUrl(e.target.value)} type="text" value={url}/>
+                    <button className="profile_form_add_btn" type="submit">Add</button>
             </form>
                 : null
         }
@@ -247,6 +264,7 @@ const Profile = () => {
         ? <Redirect to="/login" />
         : null
         }            
+        </div>
         </div>
     )
 }

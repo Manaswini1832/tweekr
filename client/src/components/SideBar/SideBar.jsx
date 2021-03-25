@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
+import CloseRoundedIcon from '@material-ui/icons/CloseRounded';
 import Modal from "../Modal/Modal";
 import axios from "axios";
 
@@ -73,7 +74,11 @@ const SideBar = (props) => {
     }
 
     return(
+        <div className={props.sidebar_toggle_btn ? "show_sidebar" : "hide_sidebar"}>
         <nav className={theme === 'light' ? "common_sidebar light_sidebar" : "common_sidebar dark_sidebar"}>
+            <button className="sidebar_close_sidebar_btn" onClick={() => props.set_sidebar_toggle(false)}>
+                <CloseRoundedIcon/>
+            </button>
             <ul className="sidebar_list">
                 {collecNames.map((collec, index) => {
                         return(
@@ -102,8 +107,9 @@ const SideBar = (props) => {
                                             </div>
                                         )
                                 })}
+                                                  <button className="new_collec_btn" onClick={() => setModalOpen(true)}>New Collection</button>
+
             </ul>
-                  <button className="new_collec_btn" onClick={() => setModalOpen(true)}>New Collection</button>
                   <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                   <form onSubmit={createCollection}>
                         <label>Enter a new collection name</label>
@@ -115,6 +121,7 @@ const SideBar = (props) => {
                    </form>
                   </Modal>
         </nav>
+        </div>
     )
 }
 
